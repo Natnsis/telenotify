@@ -106,10 +106,11 @@ model Environment {
   updatedAt          DateTime        @updatedAt
 
   org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  apiKeys    ApiKey[]
-  customers  Customer[]
-  linkTokens LinkToken[]
-  messages   Message[]
+  apiKeys       ApiKey[]
+  customers     Customer[]
+  linkTokens    LinkToken[]
+  messages      Message[]
+  verifications Verification[]
 
   @@unique([orgId, type])
 }
@@ -209,4 +210,44 @@ model Message {
   @@unique([environmentId, idempotencyKey])
   @@index([environmentId, createdAt])
   @@index([environmentId, status])
+}
+
+// ---------- Phone verification ----------
+
+enum VerificationStatus {
+  // Link created, not opened yet.
+  PENDING
+  // Opened in Telegram; waiting for the person to share their phone number.
+  AWAITING_CONTACT
+  VERIFIED
+  FAILED
+  EXPIRED
+}
+
+// "Verify with Telegram": the person shares their own contact with the bot, and
+// Telegram vouches that the phone number belongs to that account. No SMS, no code.
+model Verification {
+  id             String             @id @default(uuid())
+  environmentId  String
+  // Carried in t.me/<bot>?start=v_<token>.
+  token          String             @unique
+  // Optional: link this customer to the chat once verified.
+  externalId     String?
+  // Optional: fail unless the shared number matches (normalized).
+  expectedPhone  String?
+  status         VerificationStatus @default(PENDING)
+  // phone_mismatch | not_own_contact
+  reason         String?
+  phone          String?
+  telegramUserId String?
+  telegramChatId String?
+  expiresAt      DateTime
+  verifiedAt     DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@index([environmentId, createdAt])
+  @@index([telegramChatId, status])
 }
