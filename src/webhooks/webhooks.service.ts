@@ -16,6 +16,8 @@ export type EnvironmentEvent =
   | 'message.received'
   | 'customer.linked'
   | 'customer.blocked'
+  | 'verification.completed'
+  | 'verification.failed'
   | 'webhook.test';
 
 export interface DeliveryResult {
