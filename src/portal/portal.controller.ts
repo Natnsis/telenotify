@@ -6,6 +6,7 @@ import { OrgAccessGuard } from '../common/org-access.guard';
 import { CurrentEnvironment, CurrentUser, EnvironmentWithOrg } from '../common/request-context';
 import { SessionGuard } from '../common/session.guard';
 import { CustomersService } from '../customers/customers.service';
+import { BillingService } from '../billing/billing.service';
 import { MessagesService } from '../messages/messages.service';
 import { VerificationsService } from '../verifications/verifications.service';
 import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, UpdateEnvironmentDto } from './portal.dto';
@@ -20,6 +21,7 @@ export class PortalController {
     private readonly customers: CustomersService,
     private readonly messages: MessagesService,
     private readonly verifications: VerificationsService,
+    private readonly billing: BillingService,
   ) {}
 
   @Post()
@@ -35,6 +37,11 @@ export class PortalController {
   @Get(':orgId')
   getOrg(@Req() req: Request & { membership: { org: Organization; role: string } }) {
     return this.portal.getOrg(req.membership.org, req.membership.role);
+  }
+
+  @Get(':orgId/billing')
+  billingOverview(@Req() req: Request & { membership: { org: Organization } }) {
+    return this.billing.overview(req.membership.org);
   }
 
   @Get(':orgId/envs/:env')

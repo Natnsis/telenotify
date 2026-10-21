@@ -59,6 +59,7 @@ export class PortalService {
       id: org.id,
       name: org.name,
       role,
+      plan: org.plan,
       liveBotConnected: Boolean(live.botTokenEncrypted),
       liveBotUsername: live.botUsername,
     };
