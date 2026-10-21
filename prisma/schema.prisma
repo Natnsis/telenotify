@@ -56,14 +56,24 @@ model UserToken {
 
 // ---------- Organizations ----------
 
+enum Plan {
+  FREE
+  STARTER
+  GROWTH
+  BUSINESS
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
+  // Monthly live quota (messages + verifications); see src/billing/plans.ts.
+  plan      Plan     @default(FREE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   memberships  Membership[]
   environments Environment[]
+  invitations  Invitation[]
 }
 
 enum Role {
@@ -82,6 +92,24 @@ model Membership {
 
   @@id([userId, orgId])
   @@index([orgId])
+}
+
+// Email invitation to join an organization; accepted by a signed-in user with that email.
+model Invitation {
+  id          String    @id @default(uuid())
+  orgId       String
+  email       String // lowercased
+  role        Role
+  tokenHash   String    @unique
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([email])
 }
 
 enum EnvironmentType {
