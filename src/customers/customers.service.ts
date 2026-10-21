@@ -147,6 +147,27 @@ export class CustomersService {
     return customers;
   }
 
+  // Called after a successful phone verification: stores the verified phone and links the chat.
+  // Sandbox environments keep their cap on linked Telegram users.
+  async linkVerified(environment: Environment, externalId: string, phone: string, chat: TelegramChat): Promise<{ linked: boolean }> {
+    if (environment.type === 'SANDBOX') {
+      const limit = Number(this.config.get('SANDBOX_LINKED_CUSTOMER_LIMIT', 10));
+      const linked = await this.prisma.customer.count({
+        where: { environmentId: environment.id, telegramChatId: { not: null }, NOT: { telegramChatId: TEST_CHAT_ID }, externalId: { not: externalId } },
+      });
+      if (linked >= limit) {
+        await this.upsert(environment, externalId, phone);
+        return { linked: false };
+      }
+    }
+    await this.prisma.customer.upsert({
+      where: { environmentId_externalId: { environmentId: environment.id, externalId } },
+      create: { environmentId: environment.id, externalId, phone, ...this.linkedFields(chat) },
+      update: { phone, ...this.linkedFields(chat) },
+    });
+    return { linked: true };
+  }
+
   findByChat(scope: ChatScope, chatId: string): Promise<CustomerWithEnvironment[]> {
     return this.prisma.customer.findMany({ where: { ...scope, telegramChatId: chatId }, include: { environment: true } });
   }
