@@ -5,6 +5,7 @@ import { Features } from '@/components/landing/features';
 import { Hero } from '@/components/landing/hero';
 import { HowItWorks } from '@/components/landing/how-it-works';
 import { LandingNav } from '@/components/landing/nav';
+import { Pricing } from '@/components/landing/pricing';
 import { Savings } from '@/components/landing/savings';
 import { UseCases } from '@/components/landing/use-cases';
 import { VerifySection } from '@/components/landing/verify-section';
@@ -22,6 +23,7 @@ export default function LandingPage() {
         <Features />
         <HowItWorks />
         <Developers />
+        <Pricing />
         <Faq />
         <FinalCta />
       </main>
