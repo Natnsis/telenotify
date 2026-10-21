@@ -5,6 +5,7 @@ import {
   Bot,
   Check,
   ChevronsUpDown,
+  CreditCard,
   FlaskConical,
   KeyRound,
   LogOut,
@@ -13,6 +14,7 @@ import {
   Plus,
   Rocket,
   Users,
+  UsersRound,
   Webhook,
   X,
 } from 'lucide-react';
@@ -51,6 +53,13 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: '/messages', label: 'Messages', icon: MessagesSquare },
       { href: '/customers', label: 'Customers', icon: Users },
+    ],
+  },
+  {
+    label: 'Organization',
+    items: [
+      { href: '/team', label: 'Team', icon: UsersRound },
+      { href: '/billing', label: 'Plan & usage', icon: CreditCard },
     ],
   },
 ];
