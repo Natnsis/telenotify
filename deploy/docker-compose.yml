@@ -1,0 +1,84 @@
+# Production stack: Caddy (HTTPS) -> portal + API, with Postgres and Redis.
+# Usage (from this folder): cp .env.production.example .env.production, fill it in, then
+#   docker compose --env-file .env.production up -d --build
+name: telenotify
+
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+      PORTAL_DOMAIN: ${PORTAL_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - portal
+
+  api:
+    build: ..
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      DATABASE_URL: postgresql://telenotify:${POSTGRES_PASSWORD}@postgres:5432/telenotify
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PUBLIC_BASE_URL: https://${API_DOMAIN}
+      PORTAL_URL: https://${PORTAL_DOMAIN}
+      COOKIE_SECURE: "true"
+      # Caddy replaces X-Forwarded-For with the real client IP, and every request
+      # reaches the API through exactly one trusted hop (Caddy or the portal).
+      TRUST_PROXY: "1"
+      ALLOW_PRIVATE_WEBHOOK_URLS: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  portal:
+    build:
+      context: ../portal
+      args:
+        API_URL: http://api:3000
+        NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: telenotify
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: telenotify
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U telenotify"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Queued messages and webhook retries live here, so persist them.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+
+volumes:
+  caddy_data:
+  caddy_config:
+  pgdata:
+  redisdata:

@@ -1,0 +1,15 @@
+{
+	email {$ACME_EMAIL}
+}
+
+# Caddy ignores X-Forwarded-For from clients and sets it to the real client IP,
+# which the API's rate limits rely on (TRUST_PROXY=1).
+{$PORTAL_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy portal:3001
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:3000
+}
