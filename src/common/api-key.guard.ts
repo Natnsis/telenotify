@@ -1,0 +1,28 @@
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { sha256 } from './crypto';
+
+// Resolves the environment (sandbox or live) from the x-api-key header.
+@Injectable()
+export class ApiKeyGuard implements CanActivate {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const apiKey = request.headers['x-api-key'];
+    if (typeof apiKey !== 'string' || !apiKey) {
+      throw new UnauthorizedException('Missing x-api-key header');
+    }
+    const key = await this.prisma.apiKey.findUnique({
+      where: { keyHash: sha256(apiKey) },
+      include: { environment: { include: { org: true } } },
+    });
+    if (!key || key.revokedAt) {
+      throw new UnauthorizedException('Invalid API key');
+    }
+    request.environment = key.environment;
+    // Best effort; not worth failing the request over.
+    this.prisma.apiKey.update({ where: { id: key.id }, data: { lastUsedAt: new Date() } }).catch(() => undefined);
+    return true;
+  }
+}
