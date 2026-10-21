@@ -13,7 +13,8 @@
     "prisma:migrate": "prisma migrate dev",
     "test": "jest",
     "test:watch": "jest --watch",
-    "migrate:deploy": "prisma migrate deploy"
+    "migrate:deploy": "prisma migrate deploy",
+    "plan:set": "ts-node --transpile-only scripts/set-plan.ts"
   },
   "jest": {
     "moduleFileExtensions": [
