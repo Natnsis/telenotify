@@ -94,14 +94,40 @@ if (message.status === 'UNDELIVERABLE') {
           />
         </Section>
 
+        <div id="verify">
+          <Section n={5} title="Verify a phone number without SMS">
+            <p>
+              Replace SMS one-time codes. Create a verification, send the person to its link (a “Verify with Telegram” button), and they share their number with your bot in one tap. Telegram vouches the number belongs to that account, so there&apos;s no code to type and no resend.
+            </p>
+            <CodeBlock
+              language="bash"
+              code={`curl -X POST ${API_BASE_URL}/v1/verifications \\\n${h} \\\n  -d '{"phone": "0911223344", "externalId": "customer_123"}'\n\n# → { "id": "…", "status": "PENDING", "url": "https://t.me/your_bot?start=v_…" }`}
+            />
+            <Table
+              rows={[
+                ['PENDING', 'Link created, not opened yet.'],
+                ['AWAITING_CONTACT', 'Opened in Telegram; waiting for the person to share their number.'],
+                ['VERIFIED', 'Done. phone holds the verified number. With externalId, the customer is also linked for notifications.'],
+                ['FAILED', 'reason phone_mismatch: the Telegram number differs from the phone you passed.'],
+                ['EXPIRED', 'Not completed in time (default 10 minutes; set expiresInMinutes up to 60).'],
+              ]}
+              mono
+            />
+            <p>
+              Poll <code className="font-mono text-ink">GET /v1/verifications/:id</code> or listen for <code className="font-mono text-ink">verification.completed</code> and{' '}
+              <code className="font-mono text-ink">verification.failed</code>. People without Telegram can still use your SMS flow.
+            </p>
+          </Section>
+        </div>
+
         <div id="test-customers">
-          <Section n={5} title="Test customers (sandbox)">
+          <Section n={6} title="Test customers (sandbox)">
             <p>Send to these ids with a sandbox key to see every outcome without Telegram. Use them to test your fallback code.</p>
             <Table rows={testCustomers} mono />
           </Section>
         </div>
 
-        <Section n={6} title="Going live">
+        <Section n={7} title="Going live">
           <ol className="list-decimal space-y-1 pl-5">
             <li>Connect your own @BotFather bot in Live → Telegram bot.</li>
             <li>Create a live key (tn_live_…) and set an HTTPS webhook URL.</li>

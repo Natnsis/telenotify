@@ -14,6 +14,8 @@ const events = [
   ['message.received', 'The customer replied to your bot.'],
   ['customer.linked', 'A customer connected their Telegram.'],
   ['customer.blocked', 'A customer blocked your bot.'],
+  ['verification.completed', 'A phone number was verified with Telegram. Includes the verified number.'],
+  ['verification.failed', 'Verification failed (reason: phone_mismatch).'],
 ];
 
 const verifySnippet = `import crypto from 'node:crypto';
