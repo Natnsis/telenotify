@@ -11,6 +11,7 @@ import { MailModule } from './mail/mail.module';
 import { MessagesModule } from './messages/messages.module';
 import { PortalModule } from './portal/portal.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { TeamModule } from './team/team.module';
 import { TelegramWebhookModule } from './telegram/telegram-webhook.module';
 import { VerificationsModule } from './verifications/verifications.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
@@ -34,6 +35,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     BillingModule,
     AuthModule,
     PortalModule,
+    TeamModule,
     CustomersModule,
     MessagesModule,
     VerificationsModule,
