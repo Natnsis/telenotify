@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Portal users & auth ----------
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique // stored lowercased
+  name            String
+  passwordHash    String?   // null for Google-only accounts
+  googleSub       String?   @unique
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  sessions    Session[]
+  tokens      UserToken[]
+  memberships Membership[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum UserTokenType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+model UserToken {
+  tokenHash String        @id
+  userId    String
+  type      UserTokenType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
+// ---------- Organizations ----------
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships  Membership[]
+  environments Environment[]
+}
+
+enum Role {
+  OWNER
+  MEMBER
+}
+
+model Membership {
+  userId    String
+  orgId     String
+  role      Role
+  createdAt DateTime @default(now())
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@id([userId, orgId])
+  @@index([orgId])
+}
+
+enum EnvironmentType {
+  SANDBOX
+  LIVE
+}
+
+// Every organization has exactly one SANDBOX and one LIVE environment.
+// All API data (keys, customers, messages) belongs to one environment.
+model Environment {
+  id                 String          @id @default(uuid())
+  orgId              String
+  type               EnvironmentType
+  // LIVE only: the organization's own @BotFather bot. SANDBOX uses our shared bot.
+  botTokenEncrypted  String?
+  botUsername        String?
+  // Random secret Telegram echoes back in X-Telegram-Bot-Api-Secret-Token (LIVE bots).
+  webhookSecret      String
+  eventWebhookUrl    String?
+  eventSigningSecret String
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  apiKeys    ApiKey[]
+  customers  Customer[]
+  linkTokens LinkToken[]
+  messages   Message[]
+
+  @@unique([orgId, type])
+}
+
+model ApiKey {
+  id            String    @id @default(uuid())
+  environmentId String
+  name          String
+  keyHash       String    @unique
+  prefix        String
+  lastUsedAt    DateTime?
+  revokedAt     DateTime?
+  createdById   String?
+  createdAt     DateTime  @default(now())
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@index([environmentId])
+}
+
+// ---------- Messaging ----------
+
+// One end user of an organization, identified by the organization's own ID for them.
+model Customer {
+  id               String    @id @default(uuid())
+  environmentId    String
+  externalId       String
+  phone            String?
+  telegramChatId   String?
+  telegramUsername String?
+  linkedAt         DateTime?
+  // Set when the customer blocks the bot; cleared if they /start again.
+  blockedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  messages    Message[]
+
+  @@unique([environmentId, externalId])
+  @@index([environmentId, telegramChatId])
+  @@index([environmentId, phone])
+  @@index([telegramChatId])
+}
+
+// Single-use token carried in t.me/<bot>?start=<token> to connect a chat to a customer.
+model LinkToken {
+  token         String    @id
+  environmentId String
+  externalId    String
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@index([environmentId, externalId])
+}
+
+enum Direction {
+  OUTBOUND
+  INBOUND
+}
+
+enum MessageStatus {
+  QUEUED
+  SENT
+  // Telegram cannot reach this customer; the caller should use its own fallback.
+  UNDELIVERABLE
+  // Telegram kept failing or rejected the message.
+  FAILED
+  RECEIVED
+}
+
+model Message {
+  id                String        @id @default(uuid())
+  environmentId     String
+  customerId        String
+  direction         Direction
+  status            MessageStatus
+  // not_linked | blocked | chat_gone | telegram_unavailable | telegram_rejected
+  reason            String?
+  text              String
+  // [[{ text, url }]] rows of inline URL buttons.
+  buttons           Json?
+  idempotencyKey    String?
+  telegramMessageId String?
+  error             String?
+  attempts          Int           @default(0)
+  sentAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  customer    Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([environmentId, idempotencyKey])
+  @@index([environmentId, createdAt])
+  @@index([environmentId, status])
+}
