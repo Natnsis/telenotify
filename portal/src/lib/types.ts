@@ -13,7 +13,10 @@ export interface OrgSummary {
   role: 'OWNER' | 'MEMBER';
 }
 
+export type PlanId = 'FREE' | 'STARTER' | 'GROWTH' | 'BUSINESS';
+
 export interface Org extends OrgSummary {
+  plan: PlanId;
   liveBotConnected: boolean;
   liveBotUsername: string | null;
 }
@@ -91,4 +94,22 @@ export interface Verification {
   expiresAt: string;
   verifiedAt: string | null;
   createdAt: string;
+}
+
+export interface BillingOverview {
+  plan: PlanId;
+  usage: { used: number; messages: number; verifications: number; quota: number | null; start: string; end: string };
+  plans: { id: PlanId; name: string; priceEtb: number | null; monthlyQuota: number | null; blurb: string }[];
+}
+
+export interface TeamOverview {
+  members: { userId: string; name: string; email: string; role: 'OWNER' | 'MEMBER'; joinedAt: string }[];
+  invitations: { id: string; email: string; role: 'OWNER' | 'MEMBER'; expiresAt: string; createdAt: string }[];
+}
+
+export interface InvitationPreview {
+  orgName: string;
+  email: string;
+  role: 'OWNER' | 'MEMBER';
+  invitedBy: string | null;
 }
