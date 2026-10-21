@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { StatusBadge } from '@/components/status-badge';
 import { Alert, Button, Card, CodeBlock, Input, PageHeader } from '@/components/ui';
+import { VerifyCard } from '@/components/verify-card';
 import { api, ApiError, fetcher } from '@/lib/api';
 import { envPath, useEnvironment, useOrgParams, useRequireUser } from '@/lib/hooks';
 import type { Customer, LinkResult, Message, Page } from '@/lib/types';
@@ -160,6 +161,9 @@ export default function PlaygroundPage() {
             </div>
           )}
         </Card>
+      </div>
+      <div className="mt-6">
+        <VerifyCard basePath={base} />
       </div>
     </>
   );
