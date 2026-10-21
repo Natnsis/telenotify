@@ -14,6 +14,10 @@ const faqs = [
     a: 'Only Telegram, which most already use. They tap your link, press Start once, and they’re connected. No app, no account, no forms.',
   },
   {
+    q: 'Can I replace SMS one-time codes (OTP)?',
+    a: 'Yes. Create a verification, show the “Verify with Telegram” link, and the customer shares their number with your bot in one tap. Telegram confirms the number belongs to that account. No code to send, no resends to pay for. Keep SMS OTP only for people without Telegram.',
+  },
+  {
     q: 'What happens if a customer isn’t on Telegram?',
     a: 'The API returns UNDELIVERABLE with reason not_linked immediately. Your system sends that message through your existing SMS or email provider. We tell you exactly when it’s needed.',
   },

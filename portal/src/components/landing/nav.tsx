@@ -11,8 +11,9 @@ import { fetcher } from '@/lib/api';
 import type { Me } from '@/lib/types';
 
 const links = [
+  { href: '#verify', label: 'Verify phones' },
+  { href: '#savings', label: 'Savings' },
   { href: '#features', label: 'Features' },
-  { href: '#how-it-works', label: 'How it works' },
   { href: '#developers', label: 'Developers' },
   { href: '#faq', label: 'FAQ' },
 ];

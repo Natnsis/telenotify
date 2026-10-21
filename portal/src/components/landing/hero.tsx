@@ -43,7 +43,7 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mt-6 max-w-xl text-lg leading-relaxed text-muted sm:text-xl"
           >
-            Send order updates, OTPs and receipts on <b className="font-semibold text-ink">Telegram</b> from your own branded bot. One API call, and an instant signal when a customer can&apos;t be reached, so your SMS fallback only runs when it has to.
+            Verify phone numbers and send transaction alerts, order updates and receipts on <b className="font-semibold text-ink">Telegram</b>, the app your customers already use, from your own branded bot. Stop paying for every SMS and every “resend code”.
           </motion.p>
 
           <motion.div
@@ -66,7 +66,7 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.4 }}
             className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted"
           >
-            {['No credit card', 'Free to send on Telegram', 'Your own bot and brand'].map((item) => (
+            {['No credit card', 'No SMS cost per message', 'Phone verification without OTP'].map((item) => (
               <li key={item} className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-4 text-emerald-500" /> {item}
               </li>
