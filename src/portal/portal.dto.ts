@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
 import { InlineButton } from '../telegram/telegram-api.client';
 
 export class CreateOrgDto {
@@ -49,4 +49,15 @@ export class PlaygroundSendDto {
   @IsOptional()
   @IsArray()
   buttons?: InlineButton[][];
+}
+
+export class PlaygroundVerifyDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(128)
+  externalId?: string;
+
+  @IsOptional()
+  @Matches(/^(\+?[0-9 ()-]{9,20})?$/)
+  phone?: string;
 }

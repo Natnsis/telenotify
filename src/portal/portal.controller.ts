@@ -7,7 +7,8 @@ import { CurrentEnvironment, CurrentUser, EnvironmentWithOrg } from '../common/r
 import { SessionGuard } from '../common/session.guard';
 import { CustomersService } from '../customers/customers.service';
 import { MessagesService } from '../messages/messages.service';
-import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, PlaygroundLinkDto, PlaygroundSendDto, UpdateEnvironmentDto } from './portal.dto';
+import { VerificationsService } from '../verifications/verifications.service';
+import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, UpdateEnvironmentDto } from './portal.dto';
 import { PortalService } from './portal.service';
 
 @ApiExcludeController()
@@ -18,6 +19,7 @@ export class PortalController {
     private readonly portal: PortalService,
     private readonly customers: CustomersService,
     private readonly messages: MessagesService,
+    private readonly verifications: VerificationsService,
   ) {}
 
   @Post()
@@ -116,6 +118,17 @@ export class PortalController {
   playgroundSend(@CurrentEnvironment() environment: EnvironmentWithOrg, @Body() dto: PlaygroundSendDto) {
     this.assertSandbox(environment);
     return this.messages.send(environment, dto);
+  }
+
+  @Post(':orgId/envs/:env/playground/verify')
+  playgroundVerify(@CurrentEnvironment() environment: EnvironmentWithOrg, @Body() dto: PlaygroundVerifyDto) {
+    this.assertSandbox(environment);
+    return this.verifications.create(environment, { externalId: dto.externalId?.trim() || undefined, phone: dto.phone?.trim() || undefined });
+  }
+
+  @Get(':orgId/envs/:env/verifications/:id')
+  verification(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('id') id: string) {
+    return this.verifications.get(environment, id);
   }
 
   private assertSandbox(environment: EnvironmentWithOrg) {
