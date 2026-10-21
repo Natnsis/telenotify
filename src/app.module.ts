@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { throttlerOptions } from './common/throttling';
 import { AuthModule } from './auth/auth.module';
+import { BillingModule } from './billing/billing.module';
 import { CustomersModule } from './customers/customers.module';
 import { HealthController } from './health.controller';
 import { MailModule } from './mail/mail.module';
@@ -30,6 +31,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     PrismaModule,
     MailModule,
     WebhooksModule,
+    BillingModule,
     AuthModule,
     PortalModule,
     CustomersModule,
