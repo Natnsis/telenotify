@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: telenotify
+      POSTGRES_PASSWORD: telenotify
+      POSTGRES_DB: telenotify
+    ports:
+      - "5440:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6390:6379"
+volumes:
+  pgdata:
