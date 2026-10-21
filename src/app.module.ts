@@ -1,0 +1,40 @@
+import { BullModule } from '@nestjs/bullmq';
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { throttlerOptions } from './common/throttling';
+import { AuthModule } from './auth/auth.module';
+import { CustomersModule } from './customers/customers.module';
+import { HealthController } from './health.controller';
+import { MailModule } from './mail/mail.module';
+import { MessagesModule } from './messages/messages.module';
+import { PortalModule } from './portal/portal.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { TelegramWebhookModule } from './telegram/telegram-webhook.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot(throttlerOptions),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        connection: {
+          host: config.get('REDIS_HOST', 'localhost'),
+          port: Number(config.get('REDIS_PORT', 6379)),
+        },
+      }),
+    }),
+    PrismaModule,
+    MailModule,
+    WebhooksModule,
+    AuthModule,
+    PortalModule,
+    CustomersModule,
+    MessagesModule,
+    TelegramWebhookModule,
+  ],
+  controllers: [HealthController],
+})
+export class AppModule {}
