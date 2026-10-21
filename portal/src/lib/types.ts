@@ -78,3 +78,17 @@ export interface LinkResult {
   url: string;
   expiresAt: string;
 }
+
+export type VerificationStatus = 'PENDING' | 'AWAITING_CONTACT' | 'VERIFIED' | 'FAILED' | 'EXPIRED';
+
+export interface Verification {
+  id: string;
+  status: VerificationStatus;
+  reason: string | null;
+  externalId: string | null;
+  phone: string | null;
+  url: string | null;
+  expiresAt: string;
+  verifiedAt: string | null;
+  createdAt: string;
+}
