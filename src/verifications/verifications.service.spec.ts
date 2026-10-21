@@ -14,7 +14,8 @@ function setup(open: object | null) {
   const telegram = { botUsernameFor: jest.fn().mockReturnValue('abebe_bot') };
   const customers = { linkVerified: jest.fn().mockResolvedValue({ linked: true }) };
   const webhooks = { emit: jest.fn() };
-  const service = new VerificationsService(prisma as any, telegram as any, customers as any, webhooks as any);
+  const billing = { assertWithinQuota: jest.fn() };
+  const service = new VerificationsService(prisma as any, telegram as any, customers as any, webhooks as any, billing as any);
   const events = () => webhooks.emit.mock.calls.map((c) => c[1]);
   return { service, prisma, customers, events };
 }

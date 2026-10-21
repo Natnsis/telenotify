@@ -14,7 +14,8 @@ function setup(customer: object, environment: object = { id: 'env-1', type: 'LIV
   const webhooks = { emit: jest.fn() };
   const config = { get: (_key: string, fallback: unknown) => fallback };
   const queue = { add: jest.fn() };
-  const service = new MessagesService(prisma as any, customers as any, telegram as any, webhooks as any, config as any, queue as any);
+  const billing = { assertWithinQuota: jest.fn() };
+  const service = new MessagesService(prisma as any, customers as any, telegram as any, webhooks as any, config as any, billing as any, queue as any);
   return { service, queue, webhooks, environment: environment as any };
 }
 

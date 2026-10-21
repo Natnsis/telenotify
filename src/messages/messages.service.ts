@@ -3,6 +3,7 @@ import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundExc
 import { ConfigService } from '@nestjs/config';
 import { Customer, Environment, Message, MessageStatus, Prisma } from '@prisma/client';
 import { Queue } from 'bullmq';
+import { BillingService } from '../billing/billing.service';
 import { CustomersService } from '../customers/customers.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
@@ -21,6 +22,7 @@ export class MessagesService {
     private readonly telegram: TelegramService,
     private readonly webhooks: WebhooksService,
     private readonly config: ConfigService,
+    private readonly billing: BillingService,
     @InjectQueue(MESSAGES_QUEUE) private readonly queue: Queue<DeliverJob>,
   ) {}
 
@@ -36,6 +38,7 @@ export class MessagesService {
       throw new BadRequestException('Connect your Telegram bot in the portal before sending live messages');
     }
     await this.enforceSandboxLimit(environment);
+    await this.billing.assertWithinQuota(environment);
 
     const customer = await this.customers.upsert(environment, dto.to);
     const reason = !customer.telegramChatId ? 'not_linked' : customer.blockedAt ? 'blocked' : null;

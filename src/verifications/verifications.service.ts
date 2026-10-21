@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Environment, Verification } from '@prisma/client';
+import { BillingService } from '../billing/billing.service';
 import { randomToken } from '../common/crypto';
 import { normalizePhone } from '../common/phone';
 import { isTestCustomer } from '../common/sandbox';
@@ -24,6 +25,7 @@ export class VerificationsService {
     private readonly telegram: TelegramService,
     private readonly customers: CustomersService,
     private readonly webhooks: WebhooksService,
+    private readonly billing: BillingService,
   ) {}
 
   async create(environment: Environment, input: { externalId?: string; phone?: string; expiresInMinutes?: number }) {
@@ -36,6 +38,7 @@ export class VerificationsService {
         environment.type === 'LIVE' ? 'Connect your Telegram bot in the portal first' : 'The sandbox bot is not configured on this server',
       );
     }
+    await this.billing.assertWithinQuota(environment);
     const verification = await this.prisma.verification.create({
       data: {
         environmentId: environment.id,
