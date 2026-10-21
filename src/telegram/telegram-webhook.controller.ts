@@ -4,6 +4,7 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { safeEqual } from '../common/crypto';
 import { ChatScope, CustomersService } from '../customers/customers.service';
 import { MessagesService } from '../messages/messages.service';
+import { VERIFICATION_PREFIX, VerificationsService } from '../verifications/verifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { TelegramApiClient } from './telegram-api.client';
@@ -31,6 +32,7 @@ export class TelegramWebhookController {
     private readonly telegram: TelegramService,
     private readonly customers: CustomersService,
     private readonly messages: MessagesService,
+    private readonly verifications: VerificationsService,
     private readonly webhooks: WebhooksService,
     private readonly config: ConfigService,
   ) {}
@@ -93,6 +95,24 @@ export class TelegramWebhookController {
     const { bot } = ctx;
 
     if (message.contact) {
+      // An open phone verification for this chat takes precedence over phone-based linking.
+      const outcome = await this.verifications.completeWithContact(ctx.scope, chat, message.contact, message.from.id);
+      if (outcome.kind === 'not_own_contact') {
+        await bot.sendMessage(chat.chatId, 'Please share your own phone number using the button below.', { requestContact: true });
+        return;
+      }
+      if (outcome.kind === 'verified') {
+        await bot.removeKeyboardMessage(chat.chatId, `✅ Your phone number is verified. You can go back to ${outcome.orgName} now.`);
+        return;
+      }
+      if (outcome.kind === 'mismatch') {
+        await bot.removeKeyboardMessage(
+          chat.chatId,
+          `❌ This Telegram account's phone number doesn't match the one you entered at ${outcome.orgName}. Go back and check the number.`,
+        );
+        return;
+      }
+
       if (!ctx.phoneLinkEnvironmentId) {
         await bot.removeKeyboardMessage(chat.chatId, 'In the sandbox, connect using the link from the developer portal.');
         return;
@@ -119,6 +139,19 @@ export class TelegramWebhookController {
 
     if (text === '/start' || text.startsWith('/start ')) {
       const token = text.slice('/start'.length).trim();
+      if (token.startsWith(VERIFICATION_PREFIX)) {
+        const started = await this.verifications.start(ctx.scope, token.slice(VERIFICATION_PREFIX.length), chat);
+        if (!started) {
+          await bot.sendMessage(chat.chatId, 'This verification link has expired or was already used. Go back and start again.');
+          return;
+        }
+        await bot.sendMessage(
+          chat.chatId,
+          `${started.orgName} wants to confirm your phone number.\n\nTap “Share my phone number” below. Telegram shares only your number, nothing else.`,
+          { requestContact: true },
+        );
+        return;
+      }
       if (token) {
         const result = await this.customers.linkByToken(ctx.scope, token, chat);
         if (result.ok) {
