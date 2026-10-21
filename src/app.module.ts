@@ -11,6 +11,7 @@ import { MessagesModule } from './messages/messages.module';
 import { PortalModule } from './portal/portal.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { TelegramWebhookModule } from './telegram/telegram-webhook.module';
+import { VerificationsModule } from './verifications/verifications.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
@@ -33,6 +34,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     PortalModule,
     CustomersModule,
     MessagesModule,
+    VerificationsModule,
     TelegramWebhookModule,
   ],
   controllers: [HealthController],
