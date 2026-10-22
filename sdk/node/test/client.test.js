@@ -84,3 +84,13 @@ test('verifies and parses signed webhook events', () => {
   const stale = `t=${old},v1=${createHmac('sha256', secret).update(`${old}.${body}`).digest('hex')}`;
   assert.equal(webhooks.verifySignature(body, stale, secret), false);
 });
+
+test('sends by template and lists templates', async () => {
+  const fetch = fakeFetch([{ body: { id: 'm2', status: 'QUEUED', template: 'order_ready' } }, { body: [{ key: 'order_ready', placeholders: ['name'] }] }]);
+  const tn = client(fetch);
+  await tn.messages.send({ to: 'c', template: 'order_ready', params: { name: 'Hana' }, locale: 'am' });
+  assert.deepEqual(JSON.parse(fetch.calls[0].init.body), { to: 'c', template: 'order_ready', params: { name: 'Hana' }, locale: 'am' });
+  const templates = await tn.templates.list();
+  assert.equal(fetch.calls[1].url, 'http://api.test/v1/templates');
+  assert.deepEqual(templates[0].placeholders, ['name']);
+});
