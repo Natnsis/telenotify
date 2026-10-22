@@ -133,6 +133,12 @@ model Environment {
   webhookSecret      String
   eventWebhookUrl    String?
   eventSigningSecret String
+  // Bring-your-own SMS fallback (AfroMessage), paid by the organization. In the
+  // sandbox it is simulated and needs no credentials.
+  smsFallbackEnabled Boolean         @default(false)
+  afroTokenEncrypted String?
+  afroIdentifierId   String?
+  afroSenderName     String?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
@@ -247,6 +253,14 @@ enum MessageStatus {
   RECEIVED
 }
 
+enum FallbackStatus {
+  QUEUED
+  SENT
+  FAILED
+  // Fallback is on but this customer has no phone number.
+  SKIPPED
+}
+
 model Message {
   id                String        @id @default(uuid())
   environmentId     String
@@ -265,6 +279,13 @@ model Message {
   idempotencyKey    String?
   telegramMessageId String?
   error             String?
+  // false when the caller opted this message out of SMS fallback.
+  smsFallback       Boolean         @default(true)
+  fallbackStatus    FallbackStatus?
+  fallbackError     String?
+  // AfroMessage's message id, or "simulated" in the sandbox.
+  fallbackProviderId String?
+  fallbackAt        DateTime?
   attempts          Int           @default(0)
   sentAt            DateTime?
   createdAt         DateTime      @default(now())
