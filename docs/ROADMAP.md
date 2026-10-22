@@ -14,11 +14,11 @@ Agreed order (2026-10-22). Tick items as they ship; keep this file current.
 - [x] Usage alert emails at 80% and 100% of the plan quota
 - [x] Audit log: keys created/revoked, bot connected, invites, plan changes
 
-## Batch 3: Make the value visible
-- [ ] Analytics on Get started: messages per day, delivery rate, % reachable on Telegram, SMS money saved
-- [ ] Customer detail page: link status, phone, verification history, messages, send test, unlink
-- [ ] QR codes for connect links (downloadable PNG)
-- [ ] Quick search (Cmd+K) and a short first-login tour, with better empty states
+## Batch 3: Make the value visible ✅ (done 2026-10-22)
+- [x] Analytics on Get started: messages per day, delivery rate, % reachable on Telegram, SMS money saved
+- [x] Customer detail page: link status, phone, verification history, messages, send test, unlink
+- [x] QR codes for connect links (downloadable PNG)
+- [x] Quick search (Cmd+K) and a short first-login tour, with better empty states
 
 ## Batch 4: Faster integration
 - [ ] Official Node/TypeScript SDK (send, verify, link, verifyWebhook)
