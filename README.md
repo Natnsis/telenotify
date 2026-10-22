@@ -7,6 +7,7 @@ Telenotify only sends on Telegram. When a customer can't be reached there, the A
 ```
 .             NestJS API (public /v1 API, portal API, auth, Telegram webhooks)
 portal/       Next.js developer portal (talks to the API through its /api proxy)
+sdk/node/     @telenotify/node: official Node.js/TypeScript SDK
 ```
 
 ## Run locally
@@ -102,6 +103,13 @@ docker compose --env-file .env.production up -d --build
 - **Migrations:** the API applies pending database migrations each time it starts.
 - **Google:** add `https://<PORTAL_DOMAIN>/api/auth/google/callback` as a redirect URI, and publish the consent screen.
 - **Back up** the `pgdata` volume and `ENCRYPTION_KEY`.
+
+## Developer tools
+
+- **Node SDK** (`sdk/node`, `@telenotify/node`): typed client for messages, customers and verifications; safe retries; `webhooks.constructEvent()`. Build and test with `npm test` in that folder. Not published to npm yet.
+- **API reference** in the portal: every endpoint from the live OpenAPI spec, with "Send request" using your key, curl, and a Postman collection download.
+- **Request log** (API keys page): each `/v1` call with status, timing, key and error message, kept 30 days.
+- **Webhook delivery log** and **message detail** pages for debugging delivery.
 
 ## Account, team and compliance
 
