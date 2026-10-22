@@ -8,8 +8,12 @@ function setup(plan: string, messages: number, verifications: number) {
     message: { count: jest.fn().mockResolvedValue(messages) },
     verification: { count: jest.fn().mockResolvedValue(verifications) },
     organization: { findUniqueOrThrow: jest.fn() },
+    usageAlert: { create: jest.fn() },
+    membership: { findMany: jest.fn().mockResolvedValue([{ user: { email: 'owner@example.com' } }]) },
   };
-  return { billing: new BillingService(prisma as any), prisma, env: { id: 'live-1', type: 'LIVE', orgId: 'org-1', org: { id: 'org-1', plan } } as any };
+  const mail = { send: jest.fn() };
+  const config = { getOrThrow: () => 'http://portal.test' };
+  return { billing: new BillingService(prisma as any, mail as any, config as any), prisma, mail, env: { id: 'live-1', type: 'LIVE', orgId: 'org-1', org: { id: 'org-1', name: 'Mela', plan } } as any };
 }
 
 describe('BillingService', () => {
@@ -42,5 +46,32 @@ describe('BillingService', () => {
     const { start, end } = currentPeriod(new Date('2026-10-21T23:30:00Z'));
     expect(start.toISOString()).toBe('2026-10-01T00:00:00.000Z');
     expect(end.toISOString()).toBe('2026-11-01T00:00:00.000Z');
+  });
+
+  describe('usage alerts', () => {
+    const org = { id: 'org-1', name: 'Mela', plan: 'FREE' } as any;
+
+    it('sends nothing below 80%', async () => {
+      const { billing, mail } = setup('FREE', 0, 0);
+      await billing.sendUsageAlerts(org, 799, 1000);
+      expect(mail.send).not.toHaveBeenCalled();
+    });
+
+    it('emails owners at 80%, once per month', async () => {
+      const { billing, mail, prisma } = setup('FREE', 0, 0);
+      await billing.sendUsageAlerts(org, 800, 1000);
+      expect(mail.send).toHaveBeenCalledWith('owner@example.com', expect.stringContaining('80%'), expect.stringContaining('/o/org-1/live/billing'));
+      const { Prisma } = jest.requireActual('@prisma/client');
+      prisma.usageAlert.create.mockRejectedValue(new Prisma.PrismaClientKnownRequestError('dup', { code: 'P2002', clientVersion: 'x' }));
+      mail.send.mockClear();
+      await billing.sendUsageAlerts(org, 850, 1000);
+      expect(mail.send).not.toHaveBeenCalled();
+    });
+
+    it('sends both alerts when usage jumps past 100%', async () => {
+      const { billing, mail } = setup('FREE', 0, 0);
+      await billing.sendUsageAlerts(org, 1000, 1000);
+      expect(mail.send.mock.calls.map((c) => c[1])).toEqual([expect.stringContaining('80%'), expect.stringContaining('paused')]);
+    });
   });
 });
