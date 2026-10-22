@@ -64,7 +64,22 @@ export default function DocsPage() {
           </p>
         </Section>
 
-        <Section n={3} title="Fall back when Telegram can't reach the customer">
+        <Section n={3} title="Send in the customer's language with templates">
+          <p>
+            Create a template on the <Link href={`/o/${orgId}/${env}/templates`} className="font-medium text-brand hover:underline">Templates</Link> page with an English, Amharic, Afaan Oromo or
+            Tigrinya version, then send it by key with values for its {'{{placeholders}}'}:
+          </p>
+          <CodeBlock
+            language="bash"
+            code={`curl -X POST ${API_BASE_URL}/v1/messages \\\n${h} \\\n  -d '{\n    "to": "customer_123",\n    "template": "payment_received",\n    "params": { "amount": "1,250", "payer": "Abebe", "ref": "TX-88" },\n    "priority": "high"\n  }'`}
+          />
+          <p>
+            The language is the <code className="font-mono text-ink">locale</code> you pass, else the customer&apos;s locale (set with <code className="font-mono text-ink">PUT /v1/customers/:externalId</code>), else the
+            template&apos;s default. A missing value returns 400 with the names that are missing.
+          </p>
+        </Section>
+
+        <Section n={4} title="Fall back when Telegram can't reach the customer">
           <p>Telenotify only sends on Telegram. When a customer can&apos;t be reached, we tell you, and your existing SMS or email provider takes over.</p>
           <Table rows={statuses} />
           <CodeBlock
@@ -87,7 +102,7 @@ if (message.status === 'UNDELIVERABLE') {
           </p>
         </Section>
 
-        <Section n={4} title="Listen for events">
+        <Section n={5} title="Listen for events">
           <p>Set a webhook URL to receive message.sent, message.undeliverable, message.failed, message.received, customer.linked and customer.blocked. Verify the signature using the snippet on the Webhooks page.</p>
           <CodeBlock
             language="json"
@@ -101,7 +116,7 @@ if (message.status === 'UNDELIVERABLE') {
         </Section>
 
         <div id="verify">
-          <Section n={5} title="Verify a phone number without SMS">
+          <Section n={6} title="Verify a phone number without SMS">
             <p>
               Replace SMS one-time codes. Create a verification, send the person to its link (a “Verify with Telegram” button), and they share their number with your bot in one tap. Telegram vouches the number belongs to that account, so there&apos;s no code to type and no resend.
             </p>
@@ -127,13 +142,13 @@ if (message.status === 'UNDELIVERABLE') {
         </div>
 
         <div id="test-customers">
-          <Section n={6} title="Test customers (sandbox)">
+          <Section n={7} title="Test customers (sandbox)">
             <p>Send to these ids with a sandbox key to see every outcome without Telegram. Use them to test your fallback code.</p>
             <Table rows={testCustomers} mono />
           </Section>
         </div>
 
-        <Section n={7} title="Going live">
+        <Section n={8} title="Going live">
           <ol className="list-decimal space-y-1 pl-5">
             <li>Connect your own @BotFather bot in Live → Telegram bot.</li>
             <li>Create a live key (tn_live_…) and set an HTTPS webhook URL.</li>
