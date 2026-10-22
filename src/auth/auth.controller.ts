@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Logger, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Logger, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { User } from '@prisma/client';
@@ -8,7 +8,7 @@ import { randomToken, safeEqual } from '../common/crypto';
 import { CurrentUser } from '../common/request-context';
 import { AUTH_LIMITS } from '../common/throttling';
 import { AllowUnverified, SESSION_COOKIE, SessionGuard } from '../common/session.guard';
-import { EmailDto, LoginDto, ResetPasswordDto, SignupDto, TokenDto } from './auth.dto';
+import { ChangePasswordDto, DeleteAccountDto, EmailDto, LoginDto, ResetPasswordDto, SignupDto, TokenDto, UpdateProfileDto } from './auth.dto';
 import { AuthService } from './auth.service';
 import { GoogleService } from './google.service';
 
@@ -60,6 +60,29 @@ export class AuthController {
   @UseGuards(SessionGuard)
   me(@CurrentUser() user: User) {
     return this.auth.toView(user);
+  }
+
+  @Patch('me')
+  @UseGuards(SessionGuard)
+  async updateProfile(@CurrentUser() user: User, @Body() dto: UpdateProfileDto) {
+    return this.auth.toView(await this.auth.updateProfile(user, dto.name));
+  }
+
+  @Post('change-password')
+  @HttpCode(204)
+  @Throttle(AUTH_LIMITS.login)
+  @UseGuards(SessionGuard)
+  async changePassword(@CurrentUser() user: User, @Req() req: Request, @Body() dto: ChangePasswordDto) {
+    await this.auth.changePassword(user, req.cookies?.[SESSION_COOKIE], dto.currentPassword, dto.newPassword);
+  }
+
+  @Delete('me')
+  @HttpCode(204)
+  @AllowUnverified()
+  @UseGuards(SessionGuard)
+  async deleteAccount(@CurrentUser() user: User, @Body() dto: DeleteAccountDto, @Res({ passthrough: true }) res: Response) {
+    await this.auth.deleteAccount(user, dto.confirmEmail);
+    res.clearCookie(SESSION_COOKIE, this.cookieOptions());
   }
 
   @Post('resend-verification')

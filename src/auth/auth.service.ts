@@ -1,8 +1,10 @@
-import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User, UserTokenType } from '@prisma/client';
 import { hashPassword, randomToken, sha256, verifyPassword } from '../common/crypto';
+import { AuditService } from '../audit/audit.service';
 import { MailService } from '../mail/mail.service';
+import { TelegramService } from '../telegram/telegram.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const SESSION_DAYS = 30;
@@ -15,7 +17,11 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private readonly config: ConfigService,
+    private readonly audit: AuditService,
+    private readonly telegram: TelegramService,
   ) {}
+
+  private readonly logger = new Logger(AuthService.name);
 
   async signup(name: string, email: string, password: string): Promise<User> {
     const normalized = email.trim().toLowerCase();
@@ -107,6 +113,59 @@ export class AuthService {
     return this.prisma.user.create({
       data: { email, name: profile.name || email.split('@')[0], googleSub: profile.sub, emailVerifiedAt: new Date() },
     });
+  }
+
+  async updateProfile(user: User, name: string): Promise<User> {
+    return this.prisma.user.update({ where: { id: user.id }, data: { name: name.trim() } });
+  }
+
+  // Sets or changes the password and signs out every other session.
+  async changePassword(user: User, currentSessionToken: string | undefined, currentPassword: string | undefined, newPassword: string) {
+    if (user.passwordHash && !(currentPassword && (await verifyPassword(currentPassword, user.passwordHash)))) {
+      throw new UnauthorizedException('Your current password is incorrect');
+    }
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(newPassword) } }),
+      this.prisma.session.deleteMany({ where: { userId: user.id, ...(currentSessionToken ? { NOT: { tokenHash: sha256(currentSessionToken) } } : {}) } }),
+    ]);
+  }
+
+  // Deletes the account. Organizations where the user is the only member are deleted
+  // too; an organization with other members needs another owner first.
+  async deleteAccount(user: User, confirmEmail: string) {
+    if (confirmEmail.trim().toLowerCase() !== user.email) throw new BadRequestException('Type your email address exactly to confirm');
+    const memberships = await this.prisma.membership.findMany({
+      where: { userId: user.id },
+      include: { org: { include: { memberships: true, environments: true } } },
+    });
+    const blocking = memberships.filter(
+      (m) => m.role === 'OWNER' && m.org.memberships.length > 1 && m.org.memberships.filter((x) => x.role === 'OWNER').length === 1,
+    );
+    if (blocking.length > 0) {
+      throw new ForbiddenException(
+        `You're the only owner of ${blocking.map((m) => m.org.name).join(', ')}. Make someone else an owner (invite them as owner) or remove the other members first.`,
+      );
+    }
+    for (const m of memberships) {
+      if (m.org.memberships.length === 1) {
+        await this.releaseLiveBot(m.org.environments);
+        await this.prisma.organization.delete({ where: { id: m.orgId } });
+      } else {
+        await this.audit.record(m.orgId, user, 'member.left', user.email, { reason: 'account deleted' });
+      }
+    }
+    await this.prisma.user.delete({ where: { id: user.id } });
+  }
+
+  // Detaches a deleted organization's live bot from our webhook (best effort).
+  async releaseLiveBot(environments: { type: string; botTokenEncrypted: string | null }[]) {
+    const live = environments.find((e) => e.type === 'LIVE' && e.botTokenEncrypted);
+    if (!live) return;
+    try {
+      await this.telegram.clientForEnvironment(live as never).deleteWebhook();
+    } catch (error) {
+      this.logger.warn(`Could not remove live bot webhook: ${(error as Error).message}`);
+    }
   }
 
   toView(user: User) {
