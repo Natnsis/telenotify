@@ -2,6 +2,7 @@
 
 import { KeyRound, List, Webhook as WebhookIcon } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { DeliveryLog } from '@/components/delivery-log';
 import { Alert, Button, Card, CodeBlock, Input, PageHeader, Secret, Spinner } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { envPath, useEnvironment, useOrgParams } from '@/lib/hooks';
@@ -126,6 +127,8 @@ export default function WebhooksPage() {
             <CodeBlock language="javascript" code={verifySnippet} />
           </div>
         </Card>
+
+        <DeliveryLog basePath={base} messageHref={(id) => `/o/${orgId}/${env}/messages/${id}`} />
 
         <Card icon={List} title="Events">
           <dl className="divide-y divide-line">
