@@ -8,6 +8,7 @@ import {
   ChevronsUpDown,
   CreditCard,
   FileText,
+  MessageSquareText,
   ScrollText,
   Search,
   Settings,
@@ -55,6 +56,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: '/keys', label: 'API keys', icon: KeyRound },
       { href: '/templates', label: 'Templates', icon: FileText },
+      { href: '/sms-fallback', label: 'SMS fallback', icon: MessageSquareText },
       { href: '/webhooks', label: 'Webhooks', icon: Webhook },
       { href: '/bot', label: 'Telegram bot', icon: Bot },
     ],

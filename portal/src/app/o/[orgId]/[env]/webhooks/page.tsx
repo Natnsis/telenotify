@@ -12,6 +12,8 @@ const events = [
   ['message.sent', 'Telegram accepted the message.'],
   ['message.undeliverable', 'The customer cannot be reached on Telegram (reason: not_linked, blocked, chat_gone). Use your fallback.'],
   ['message.failed', 'Telegram kept failing or rejected the message (reason: telegram_unavailable, telegram_rejected).'],
+  ['message.fallback_sent', 'SMS fallback sent the message through your AfroMessage account.'],
+  ['message.fallback_failed', 'SMS fallback could not send the SMS; see fallback.error.'],
   ['message.received', 'The customer replied to your bot.'],
   ['customer.linked', 'A customer connected their Telegram.'],
   ['customer.blocked', 'A customer blocked your bot.'],
