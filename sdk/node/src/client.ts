@@ -5,8 +5,10 @@ import type {
   Customer,
   Message,
   MessageStatus,
+  MessageTemplate,
   Page,
   SendMessageParams,
+  UpsertCustomerParams,
   Verification,
 } from './types';
 
@@ -34,6 +36,7 @@ export class Telenotify {
   readonly messages: Messages;
   readonly customers: Customers;
   readonly verifications: Verifications;
+  readonly templates: Templates;
 
   private readonly apiKey: string;
   private readonly baseUrl: string;
@@ -53,6 +56,7 @@ export class Telenotify {
     this.messages = new Messages(this);
     this.customers = new Customers(this);
     this.verifications = new Verifications(this);
+    this.templates = new Templates(this);
   }
 
   /** @internal */
@@ -125,8 +129,8 @@ class Customers {
     return this.client.request('GET', `/v1/customers/${encodeURIComponent(externalId)}`, { retryable: true });
   }
 
-  /** Creates or updates a customer, e.g. to store a phone for phone-based linking. */
-  upsert(externalId: string, params: { phone?: string } = {}): Promise<Customer> {
+  /** Creates or updates a customer, e.g. to store a phone for phone-based linking or their language. */
+  upsert(externalId: string, params: UpsertCustomerParams = {}): Promise<Customer> {
     return this.client.request('PUT', `/v1/customers/${encodeURIComponent(externalId)}`, { body: params, retryable: true });
   }
 }
@@ -141,6 +145,15 @@ class Verifications {
 
   get(id: string): Promise<Verification> {
     return this.client.request('GET', `/v1/verifications/${encodeURIComponent(id)}`, { retryable: true });
+  }
+}
+
+class Templates {
+  constructor(private readonly client: Telenotify) {}
+
+  /** Templates are managed in the portal; list them to check keys and placeholders. */
+  list(): Promise<MessageTemplate[]> {
+    return this.client.request('GET', '/v1/templates', { retryable: true });
   }
 }
 

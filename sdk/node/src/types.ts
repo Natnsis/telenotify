@@ -4,6 +4,9 @@ export type MessageStatus = 'QUEUED' | 'SENT' | 'UNDELIVERABLE' | 'FAILED' | 'RE
 export type UndeliverableReason = 'not_linked' | 'blocked' | 'chat_gone';
 export type FailureReason = 'telegram_unavailable' | 'telegram_rejected';
 
+/** Template languages: English, Amharic, Afaan Oromo, Tigrinya. */
+export type Locale = 'en' | 'am' | 'om' | 'ti';
+
 export interface InlineButton {
   text: string;
   url: string;
@@ -16,6 +19,9 @@ export interface Message {
   direction: 'OUTBOUND' | 'INBOUND';
   status: MessageStatus;
   priority: 'normal' | 'high';
+  /** Template key, when the text came from a template. */
+  template: string | null;
+  locale: Locale | null;
   reason: UndeliverableReason | FailureReason | null;
   text: string;
   buttons: InlineButton[][] | null;
@@ -29,7 +35,14 @@ export interface Message {
 export interface SendMessageParams {
   /** Your id for the customer (externalId). */
   to: string;
-  text: string;
+  /** The message text. Send either this or `template`. */
+  text?: string;
+  /** Key of a template created in the portal, e.g. "payment_received". */
+  template?: string;
+  /** Values for the template's {{placeholders}}. */
+  params?: Record<string, string | number>;
+  /** Template language. Defaults to the customer's locale, then the template's default. */
+  locale?: Locale;
   /** Rows of URL buttons shown under the message. */
   buttons?: InlineButton[][];
   /** Reusing a key returns the original message instead of sending twice. Also makes retries safe. */
@@ -41,6 +54,8 @@ export interface SendMessageParams {
 export interface Customer {
   externalId: string;
   phone: string | null;
+  /** Preferred template language. */
+  locale: Locale | null;
   /** true when a message sent now would go out on Telegram. */
   reachable: boolean;
   telegramLinked: boolean;
@@ -105,4 +120,23 @@ export interface WebhookEvent<T = Record<string, unknown>> {
   environment: 'sandbox' | 'live';
   createdAt: string;
   data: T;
+}
+
+export interface UpsertCustomerParams {
+  phone?: string;
+  /** Preferred template language. */
+  locale?: Locale;
+}
+
+export interface MessageTemplate {
+  id: string;
+  key: string;
+  name: string;
+  description: string | null;
+  variants: Partial<Record<Locale, string>>;
+  defaultLocale: Locale;
+  /** Names used as {{placeholders}} across all languages. */
+  placeholders: string[];
+  createdAt: string;
+  updatedAt: string;
 }
