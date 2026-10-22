@@ -15,6 +15,7 @@ export interface Message {
   to: string;
   direction: 'OUTBOUND' | 'INBOUND';
   status: MessageStatus;
+  priority: 'normal' | 'high';
   reason: UndeliverableReason | FailureReason | null;
   text: string;
   buttons: InlineButton[][] | null;
@@ -33,6 +34,8 @@ export interface SendMessageParams {
   buttons?: InlineButton[][];
   /** Reusing a key returns the original message instead of sending twice. Also makes retries safe. */
   idempotencyKey?: string;
+  /** "high" for OTPs and payment/transaction alerts: sent ahead of normal messages. */
+  priority?: 'normal' | 'high';
 }
 
 export interface Customer {
