@@ -17,7 +17,7 @@ export function Pricing() {
               Simple monthly plans. <span className="text-gradient">A fraction of SMS.</span>
             </>
           }
-          body="Pay only for live messages we deliver and phone numbers we verify. Undeliverable messages are free, and the sandbox is always free."
+          body="Pay only for live messages we deliver and phone numbers we verify. Undeliverable messages are free, the sandbox is always free, and long or Amharic messages cost the same as short ones (an Amharic SMS is often billed as two or three)."
         />
         <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {PLANS.map((plan, i) => {
@@ -46,7 +46,8 @@ export function Pricing() {
                 </p>
                 {perMessage !== null && (
                   <p className="mt-1 text-xs text-muted">
-                    ≈ {perMessage.toFixed(3)} ETB each, vs ~{SMS_PRICE_ETB.toFixed(2)} ETB per SMS
+                    ≈ {perMessage.toFixed(3)} ETB each ·{' '}
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">{Math.round(SMS_PRICE_ETB / perMessage)}× cheaper than SMS</span>
                   </p>
                 )}
                 <ul className="mt-6 space-y-2.5 text-sm text-muted">
