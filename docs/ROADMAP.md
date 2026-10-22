@@ -20,10 +20,10 @@ Agreed order (2026-10-22). Tick items as they ship; keep this file current.
 - [x] QR codes for connect links (downloadable PNG)
 - [x] Quick search (Cmd+K) and a short first-login tour, with better empty states
 
-## Batch 4: Faster integration
-- [ ] Official Node/TypeScript SDK (send, verify, link, verifyWebhook)
-- [ ] Request log per API key (endpoint, status, error, timing)
-- [ ] Interactive API reference in the portal + Postman collection
+## Batch 4: Faster integration ✅ (done 2026-10-22)
+- [x] Official Node/TypeScript SDK (send, verify, link, verifyWebhook)
+- [x] Request log per API key (endpoint, status, error, timing)
+- [x] Interactive API reference in the portal + Postman collection
 
 ## Batch 4b: Look and feel
 - [ ] Theme switcher: light / dark / follow system, for the portal and landing page (remembered per user)
