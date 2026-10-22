@@ -155,3 +155,10 @@ export interface Analytics {
   reachable: { customers: number; reachable: number; share: number | null };
   smsSaved: { count: number; etb: number; pricePerSmsEtb: number };
 }
+
+export interface CustomerDetail {
+  customer: Customer & { blockedAt: string | null };
+  stats: Partial<Record<MessageStatus, number>>;
+  messages: Message[];
+  verifications: { id: string; status: VerificationStatus; reason: string | null; phone: string | null; verifiedAt: string | null; createdAt: string }[];
+}

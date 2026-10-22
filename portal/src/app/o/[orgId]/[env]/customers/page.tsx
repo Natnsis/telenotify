@@ -1,6 +1,7 @@
 'use client';
 
 import { Search, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import useSWRInfinite from 'swr/infinite';
 import { Badge, Button, Card, Empty, formatDate, PageHeader, Select, Skeleton, Table } from '@/components/ui';
@@ -10,6 +11,7 @@ import type { Customer, Page } from '@/lib/types';
 
 export default function CustomersPage() {
   const { orgId, env } = useOrgParams();
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [linked, setLinked] = useState('');
   const query = new URLSearchParams({ limit: '25', ...(search ? { search } : {}), ...(linked ? { linked } : {}) });
@@ -53,7 +55,7 @@ export default function CustomersPage() {
         ) : (
           <Table head={['Customer', 'Telegram', 'Reachable', 'Linked']}>
             {customers.map((c) => (
-              <tr key={c.externalId}>
+              <tr key={c.externalId} className="cursor-pointer" onClick={() => router.push(`/o/${orgId}/${env}/customers/${encodeURIComponent(c.externalId)}`)}>
                 <td>
                   <span className="flex items-center gap-2.5">
                     <span className="grid size-7 shrink-0 place-items-center rounded-full bg-subtle text-xs font-semibold text-muted">
