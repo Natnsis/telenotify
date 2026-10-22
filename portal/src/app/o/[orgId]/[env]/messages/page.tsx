@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowDownLeft, ArrowUpRight, Inbox, Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import useSWRInfinite from 'swr/infinite';
 import { StatusBadge } from '@/components/status-badge';
@@ -13,6 +14,7 @@ const statuses: MessageStatus[] = ['QUEUED', 'SENT', 'UNDELIVERABLE', 'FAILED', 
 
 export default function MessagesPage() {
   const { orgId, env } = useOrgParams();
+  const router = useRouter();
   const [status, setStatus] = useState('');
   const [customer, setCustomer] = useState('');
   const query = new URLSearchParams({ limit: '25', ...(status ? { status } : {}), ...(customer ? { customer } : {}) });
@@ -28,7 +30,7 @@ export default function MessagesPage() {
     <>
       <PageHeader
         title="Messages"
-        description="Every message sent and received in this environment."
+        description="Every message sent and received in this environment. Click one to see its timeline and webhook events."
         actions={
           <span className="flex items-center gap-2 text-xs text-muted">
             <span className="relative flex size-2">
@@ -72,7 +74,7 @@ export default function MessagesPage() {
         ) : (
           <Table head={['', 'Customer', 'Message', 'Status', 'Time']}>
             {messages.map((m) => (
-              <tr key={m.id} className="align-top">
+              <tr key={m.id} className="cursor-pointer align-top" onClick={() => router.push(`/o/${orgId}/${env}/messages/${m.id}`)}>
                 <td className="w-10">
                   <span
                     title={m.direction === 'INBOUND' ? 'Reply from customer' : 'Sent to customer'}
