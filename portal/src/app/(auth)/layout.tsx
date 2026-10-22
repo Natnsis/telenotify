@@ -13,7 +13,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm">{children}</div>
         </div>
-        <p className="relative text-center text-xs text-muted">© {new Date().getFullYear()} Telenotify</p>
+        <p className="relative flex justify-center gap-4 text-xs text-muted">
+          <span>© {new Date().getFullYear()} Telenotify</span>
+          <Link href="/terms" className="hover:text-ink">Terms</Link>
+          <Link href="/privacy" className="hover:text-ink">Privacy</Link>
+        </p>
       </div>
       <AuthShowcase />
     </div>

@@ -41,6 +41,9 @@ export default function SignupPage() {
         <Button type="submit" loading={loading} className="w-full">
           Create account
         </Button>
+        <p className="text-center text-xs text-muted">
+          By creating an account you agree to the <TextLink href="/terms">Terms</TextLink> and <TextLink href="/privacy">Privacy Policy</TextLink>.
+        </p>
       </form>
       <p className="mt-5 text-center text-sm text-muted">
         Already have an account? <TextLink href="/login">Sign in</TextLink>

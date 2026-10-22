@@ -117,6 +117,9 @@ export function Footer() {
           <a href="#pricing" className="hover:text-ink">Pricing</a>
           <a href="#faq" className="hover:text-ink">FAQ</a>
           <Link href="/login" className="hover:text-ink">Sign in</Link>
+          <Link href="/terms" className="hover:text-ink">Terms</Link>
+          <Link href="/privacy" className="hover:text-ink">Privacy</Link>
+          <Link href="/refunds" className="hover:text-ink">Refunds</Link>
         </div>
         <p className="text-sm text-muted">© {new Date().getFullYear()} Telenotify</p>
       </div>
