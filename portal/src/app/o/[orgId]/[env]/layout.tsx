@@ -6,6 +6,9 @@ import {
   Check,
   ChevronsUpDown,
   CreditCard,
+  ScrollText,
+  Settings,
+  UserCog,
   FlaskConical,
   KeyRound,
   LogOut,
@@ -60,6 +63,8 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: '/team', label: 'Team', icon: UsersRound },
       { href: '/billing', label: 'Plan & usage', icon: CreditCard },
+      { href: '/audit', label: 'Audit log', icon: ScrollText },
+      { href: '/settings', label: 'Settings', icon: Settings },
     ],
   },
 ];
@@ -304,6 +309,9 @@ function UserMenu({ name, email }: { name: string; email: string }) {
             transition={{ duration: 0.15 }}
             className="absolute inset-x-0 bottom-full z-40 mb-1.5 rounded-xl border border-line bg-surface p-1 shadow-lift"
           >
+            <Link href="/account" className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink hover:bg-subtle">
+              <UserCog className="size-4 text-muted" /> Account settings
+            </Link>
             <Link href="/" className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink hover:bg-subtle">
               <Rocket className="size-4 text-muted" /> Telenotify home
             </Link>
