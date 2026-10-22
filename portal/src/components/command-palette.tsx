@@ -3,6 +3,7 @@
 import {
   BookOpen,
   Bot,
+  Braces,
   CreditCard,
   FileText,
   FlaskConical,
@@ -79,7 +80,8 @@ export function CommandPalette({ orgId, env, open, onOpenChange }: { orgId: stri
       { id: 'start', label: 'Get started', icon: Rocket, href: base },
       ...(env === 'sandbox' ? [{ id: 'playground', label: 'Playground', icon: FlaskConical, href: `${base}/playground` }] : []),
       { id: 'docs', label: 'Docs: integration guide', icon: BookOpen, href: `${base}/docs` },
-      { id: 'keys', label: 'API keys', icon: KeyRound, href: `${base}/keys` },
+      { id: 'reference', label: 'API reference (try endpoints)', icon: Braces, href: `${base}/api-reference` },
+      { id: 'keys', label: 'API keys & request log', icon: KeyRound, href: `${base}/keys` },
       { id: 'webhooks', label: 'Webhooks & delivery log', icon: Webhook, href: `${base}/webhooks` },
       { id: 'bot', label: 'Telegram bot', icon: Bot, href: `${base}/bot` },
       { id: 'messages', label: 'Messages', icon: MessagesSquare, href: `${base}/messages` },

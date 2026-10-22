@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ReactNode } from 'react';
 import { Card, CodeBlock, PageHeader } from '@/components/ui';
 import { API_BASE_URL } from '@/lib/api';
@@ -21,7 +22,7 @@ const statuses = [
 ];
 
 export default function DocsPage() {
-  const { env } = useOrgParams();
+  const { orgId, env } = useOrgParams();
   const key = env === 'sandbox' ? 'tn_test_…' : 'tn_live_…';
   const h = `  -H "x-api-key: ${key}" \\\n  -H "content-type: application/json"`;
 
@@ -32,9 +33,10 @@ export default function DocsPage() {
         description={
           <>
             Base URL <code className="font-mono text-ink">{API_BASE_URL}</code>. Full reference:{' '}
-            <a className="font-medium text-brand hover:underline" href={`${API_BASE_URL}/docs`} target="_blank" rel="noreferrer">
-              API reference ↗
-            </a>
+            <Link className="font-medium text-brand hover:underline" href={`/o/${orgId}/${env}/api-reference`}>
+              API reference
+            </Link>{' '}
+            · SDK: <code className="font-mono text-ink">@telenotify/node</code>
           </>
         }
       />

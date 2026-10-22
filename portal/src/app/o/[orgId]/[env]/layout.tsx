@@ -3,6 +3,7 @@
 import {
   BookOpen,
   Bot,
+  Braces,
   Check,
   ChevronsUpDown,
   CreditCard,
@@ -44,6 +45,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { href: '', label: 'Get started', icon: Rocket },
       { href: '/playground', label: 'Playground', icon: FlaskConical, sandboxOnly: true },
       { href: '/docs', label: 'Docs', icon: BookOpen },
+      { href: '/api-reference', label: 'API reference', icon: Braces },
     ],
   },
   {
