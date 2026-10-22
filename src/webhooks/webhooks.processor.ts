@@ -19,10 +19,14 @@ export class WebhooksProcessor extends WorkerHost {
   async process(job: Job<WebhookJob>): Promise<void> {
     // Read the current URL and secret, so edits and rotations apply to pending retries.
     const environment = await this.prisma.environment.findUnique({ where: { id: job.data.environmentId } });
-    if (!environment?.eventWebhookUrl) return;
+    const final = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+    if (!environment?.eventWebhookUrl) {
+      await this.webhooks.recordAttempt(job.data.payload.id, { delivered: false, error: 'Webhook URL was removed' }, true);
+      return;
+    }
     const result = await this.webhooks.deliver(environment, job.data.payload);
+    await this.webhooks.recordAttempt(job.data.payload.id, result, final);
     if (!result.delivered) {
-      const final = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
       if (final) this.logger.warn(`Giving up on event ${job.data.payload.id} after ${job.attemptsMade + 1} attempts`);
       throw new Error(result.statusCode ? `HTTP ${result.statusCode}` : (result.error ?? 'delivery failed'));
     }
