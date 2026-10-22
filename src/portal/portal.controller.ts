@@ -4,6 +4,7 @@ import { DeliveryStatus, MessageStatus, Organization, User } from '@prisma/clien
 import type { Request } from 'express';
 import { OrgAccessGuard } from '../common/org-access.guard';
 import { CurrentEnvironment, CurrentUser, EnvironmentWithOrg } from '../common/request-context';
+import { AuditService } from '../audit/audit.service';
 import { SessionGuard } from '../common/session.guard';
 import { CustomersService } from '../customers/customers.service';
 import { BillingService } from '../billing/billing.service';
@@ -24,6 +25,7 @@ export class PortalController {
     private readonly verifications: VerificationsService,
     private readonly billing: BillingService,
     private readonly webhooks: WebhooksService,
+    private readonly audit: AuditService,
   ) {}
 
   @Post()
@@ -41,6 +43,11 @@ export class PortalController {
     return this.portal.getOrg(req.membership.org, req.membership.role);
   }
 
+  @Get(':orgId/audit')
+  auditLog(@Param('orgId') orgId: string, @Query('cursor') cursor?: string, @Query('limit', new ParseIntPipe({ optional: true })) limit?: number) {
+    return this.audit.list(orgId, { cursor, limit });
+  }
+
   @Get(':orgId/billing')
   billingOverview(@Req() req: Request & { membership: { org: Organization } }) {
     return this.billing.overview(req.membership.org);
@@ -52,14 +59,14 @@ export class PortalController {
   }
 
   @Patch(':orgId/envs/:env')
-  updateEnvironment(@CurrentEnvironment() environment: EnvironmentWithOrg, @Body() dto: UpdateEnvironmentDto) {
-    return this.portal.updateEnvironment(environment, dto.eventWebhookUrl?.trim() || null);
+  updateEnvironment(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User, @Body() dto: UpdateEnvironmentDto) {
+    return this.portal.updateEnvironment(environment, dto.eventWebhookUrl?.trim() || null, user);
   }
 
   @Post(':orgId/envs/:env/signing-secret/rotate')
   @HttpCode(200)
-  rotateSigningSecret(@CurrentEnvironment() environment: EnvironmentWithOrg) {
-    return this.portal.rotateSigningSecret(environment);
+  rotateSigningSecret(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User) {
+    return this.portal.rotateSigningSecret(environment, user);
   }
 
   @Post(':orgId/envs/:env/webhook/test')
@@ -69,13 +76,13 @@ export class PortalController {
   }
 
   @Put(':orgId/envs/:env/bot')
-  connectBot(@CurrentEnvironment() environment: EnvironmentWithOrg, @Body() dto: ConnectBotDto) {
-    return this.portal.connectBot(environment, dto.botToken);
+  connectBot(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User, @Body() dto: ConnectBotDto) {
+    return this.portal.connectBot(environment, dto.botToken, user);
   }
 
   @Delete(':orgId/envs/:env/bot')
-  disconnectBot(@CurrentEnvironment() environment: EnvironmentWithOrg) {
-    return this.portal.disconnectBot(environment);
+  disconnectBot(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User) {
+    return this.portal.disconnectBot(environment, user);
   }
 
   @Get(':orgId/envs/:env/keys')
@@ -85,13 +92,13 @@ export class PortalController {
 
   @Post(':orgId/envs/:env/keys')
   createKey(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User, @Body() dto: CreateApiKeyDto) {
-    return this.portal.createKey(environment, dto.name, user.id);
+    return this.portal.createKey(environment, dto.name, user);
   }
 
   @Delete(':orgId/envs/:env/keys/:keyId')
   @HttpCode(204)
-  revokeKey(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('keyId') keyId: string) {
-    return this.portal.revokeKey(environment, keyId);
+  revokeKey(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User, @Param('keyId') keyId: string) {
+    return this.portal.revokeKey(environment, keyId, user);
   }
 
   @Get(':orgId/envs/:env/messages')

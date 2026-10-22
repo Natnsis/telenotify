@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Environment, EnvironmentType, Organization, User } from '@prisma/client';
+import { AuditService } from '../audit/audit.service';
 import { encrypt, randomToken, sha256 } from '../common/crypto';
 import { assertPublicUrl, BlockedAddressError } from '../common/network-guard';
 import { TEST_CUSTOMERS } from '../common/sandbox';
@@ -19,6 +20,7 @@ export class PortalService {
     private readonly telegram: TelegramService,
     private readonly webhooks: WebhooksService,
     private readonly config: ConfigService,
+    private readonly audit: AuditService,
   ) {}
 
   // ---------- Organizations ----------
@@ -39,8 +41,9 @@ export class PortalService {
       },
       include: { environments: true },
     });
+    await this.audit.record(org.id, user, 'org.created', org.name);
     const sandbox = org.environments.find((e) => e.type === 'SANDBOX')!;
-    const sandboxKey = await this.createKey(sandbox, 'Default sandbox key', user.id);
+    const sandboxKey = await this.createKey(sandbox, 'Default sandbox key', user);
     return { org: { id: org.id, name: org.name }, sandboxKey };
   }
 
@@ -97,13 +100,17 @@ export class PortalService {
     };
   }
 
-  async updateEnvironment(environment: Environment, eventWebhookUrl: string | null) {
+  async updateEnvironment(environment: Environment, eventWebhookUrl: string | null, actor: User) {
     if (eventWebhookUrl !== null) await this.assertWebhookUrl(environment, eventWebhookUrl);
     const updated = await this.prisma.environment.update({ where: { id: environment.id }, data: { eventWebhookUrl } });
+    if (eventWebhookUrl !== environment.eventWebhookUrl) {
+      await this.audit.record(environment.orgId, actor, 'webhook.updated', eventWebhookUrl ?? 'removed', { environment: environment.type.toLowerCase() });
+    }
     return this.environmentView(updated);
   }
 
-  async rotateSigningSecret(environment: Environment) {
+  async rotateSigningSecret(environment: Environment, actor: User) {
+    await this.audit.record(environment.orgId, actor, 'signing_secret.rotated', null, { environment: environment.type.toLowerCase() });
     const updated = await this.prisma.environment.update({
       where: { id: environment.id },
       data: { eventSigningSecret: `whsec_${randomToken(24)}` },
@@ -150,7 +157,7 @@ export class PortalService {
 
   // ---------- Live bot ----------
 
-  async connectBot(environment: Environment, botToken: string) {
+  async connectBot(environment: Environment, botToken: string, actor: User) {
     if (environment.type !== 'LIVE') throw new BadRequestException('The sandbox uses the shared Telenotify bot');
     if (botToken === this.config.get('SANDBOX_BOT_TOKEN')) throw new BadRequestException('That is the sandbox bot');
     const client = this.telegram.clientForToken(botToken.trim());
@@ -180,10 +187,12 @@ export class PortalService {
       where: { id: environment.id },
       data: { botTokenEncrypted: encrypt(botToken.trim(), this.config.getOrThrow('ENCRYPTION_KEY')), botUsername: bot.username },
     });
+    await this.audit.record(environment.orgId, actor, 'bot.connected', `@${bot.username}`);
     return this.environmentView(updated);
   }
 
-  async disconnectBot(environment: Environment) {
+  async disconnectBot(environment: Environment, actor: User) {
+    if (environment.botUsername) await this.audit.record(environment.orgId, actor, 'bot.disconnected', `@${environment.botUsername}`);
     if (environment.type !== 'LIVE') throw new BadRequestException('The sandbox uses the shared Telenotify bot');
     const updated = await this.prisma.environment.update({
       where: { id: environment.id },
@@ -200,20 +209,20 @@ export class PortalService {
   }
 
   // Returns the plaintext key once; only its hash is stored.
-  async createKey(environment: Environment, name: string, userId: string) {
+  async createKey(environment: Environment, name: string, actor: User) {
     const key = `${KEY_PREFIX[environment.type]}${randomToken(24)}`;
     const created = await this.prisma.apiKey.create({
-      data: { environmentId: environment.id, name: name.trim(), keyHash: sha256(key), prefix: key.slice(0, 12), createdById: userId },
+      data: { environmentId: environment.id, name: name.trim(), keyHash: sha256(key), prefix: key.slice(0, 12), createdById: actor.id },
     });
+    await this.audit.record(environment.orgId, actor, 'api_key.created', created.name, { environment: environment.type.toLowerCase(), prefix: created.prefix });
     return { ...this.keyView(created), key };
   }
 
-  async revokeKey(environment: Environment, keyId: string) {
-    const result = await this.prisma.apiKey.updateMany({
-      where: { id: keyId, environmentId: environment.id, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
-    if (result.count === 0) throw new NotFoundException('Key not found');
+  async revokeKey(environment: Environment, keyId: string, actor: User) {
+    const key = await this.prisma.apiKey.findFirst({ where: { id: keyId, environmentId: environment.id, revokedAt: null } });
+    if (!key) throw new NotFoundException('Key not found');
+    await this.prisma.apiKey.update({ where: { id: key.id }, data: { revokedAt: new Date() } });
+    await this.audit.record(environment.orgId, actor, 'api_key.revoked', key.name, { environment: environment.type.toLowerCase(), prefix: key.prefix });
   }
 
   private keyView(key: { id: string; name: string; prefix: string; lastUsedAt: Date | null; revokedAt: Date | null; createdAt: Date }) {
