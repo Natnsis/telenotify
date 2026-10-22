@@ -51,6 +51,8 @@ Every customer, message, key and webhook setting belongs to one environment.
 
 Templates are managed in the portal (per organization, shared by sandbox and live) with `en`, `am`, `om` and `ti` variants and `{{placeholder}}` values. The language is the `locale` sent, else the customer's locale, else the template default; missing params return 400.
 
+**SMS fallback (bring your own AfroMessage).** Optional, per environment, set on the portal's SMS fallback page. When a message ends `UNDELIVERABLE` or `FAILED` and the customer has a phone, the same text (buttons written as `label: link` lines) is sent through the organization's own AfroMessage account; the token is stored encrypted and the organization pays AfroMessage directly. Messages carry `fallback: { channel: "sms", status: queued | sent | failed | skipped, error, at }`; `"fallback": false` on a send opts that message out. The sandbox simulates it without credentials.
+
 Message results:
 
 | Status | Reason | Meaning |
@@ -60,7 +62,7 @@ Message results:
 | `UNDELIVERABLE` | `not_linked`, `blocked`, `chat_gone` | Can't reach this customer on Telegram; use your fallback |
 | `FAILED` | `telegram_unavailable`, `telegram_rejected` | Telegram kept failing (after 5 tries) or rejected the content |
 
-Events (queued with retries; signed with `x-telenotify-signature: t=<ts>,v1=HMAC_SHA256(secret, "<ts>.<body>")`, plus a stable `x-telenotify-event-id`): `message.sent`, `message.undeliverable`, `message.failed`, `message.received`, `customer.linked`, `customer.blocked`, `webhook.test`.
+Events (queued with retries; signed with `x-telenotify-signature: t=<ts>,v1=HMAC_SHA256(secret, "<ts>.<body>")`, plus a stable `x-telenotify-event-id`): `message.sent`, `message.undeliverable`, `message.failed`, `message.received`, `message.fallback_sent`, `message.fallback_failed`, `customer.linked`, `customer.blocked`, `webhook.test`.
 
 ## Portal
 
