@@ -228,6 +228,12 @@ enum Direction {
   INBOUND
 }
 
+enum MessagePriority {
+  NORMAL
+  // Queued ahead of NORMAL messages: OTPs, payment and transaction alerts.
+  HIGH
+}
+
 enum MessageStatus {
   QUEUED
   SENT
@@ -244,6 +250,7 @@ model Message {
   customerId        String
   direction         Direction
   status            MessageStatus
+  priority          MessagePriority @default(NORMAL)
   // not_linked | blocked | chat_gone | telegram_unavailable | telegram_rejected
   reason            String?
   text              String
