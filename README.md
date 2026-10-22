@@ -95,7 +95,11 @@ The portal includes:
 - **Webhook delivery:** events are queued in Redis and retried 10 times with exponential backoff (about 40 minutes in total). `x-telenotify-event-id` stays the same across retries, so receivers can de-duplicate.
 - **Client IP:** the API trusts `X-Forwarded-For` only from `TRUST_PROXY` hops. Next.js keeps any `X-Forwarded-For` it receives, so in production the portal must sit behind a proxy that overwrites it. The Caddy setup below does this.
 
-## Deploy (single server, Docker)
+## Deploy
+
+Test environment on Vercel (portal) + Render free (API): see [docs/DEPLOY.md](docs/DEPLOY.md) and `render.yaml`.
+
+### Single server, Docker
 
 ```bash
 cd deploy
