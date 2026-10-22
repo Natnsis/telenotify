@@ -74,6 +74,8 @@ model Organization {
   memberships  Membership[]
   environments Environment[]
   invitations  Invitation[]
+  auditEvents  AuditEvent[]
+  usageAlerts  UsageAlert[]
 }
 
 enum Role {
@@ -312,4 +314,39 @@ model WebhookDelivery {
 
   @@index([environmentId, createdAt])
   @@index([messageId])
+}
+
+// ---------- Audit log & usage alerts ----------
+
+// Who did what in an organization. actorEmail is kept so entries stay readable after
+// the user is deleted; actor is null for operator actions (e.g. plan changes).
+model AuditEvent {
+  id          String   @id @default(uuid())
+  orgId       String
+  actorUserId String?
+  actorEmail  String?
+  action      String
+  // Human-readable subject, e.g. a key name, an email, a bot username.
+  target      String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+}
+
+// Remembers which quota alert emails were sent, so each goes out once per month.
+model UsageAlert {
+  id        String   @id @default(uuid())
+  orgId     String
+  // Billing period, "YYYY-MM" in UTC.
+  period    String
+  // Percent of quota: 80 or 100.
+  threshold Int
+  sentAt    DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, period, threshold])
 }
