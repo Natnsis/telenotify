@@ -23,7 +23,7 @@ describe('BillingService', () => {
   });
 
   it('blocks live sends once messages + verifications reach the quota', async () => {
-    const { billing, env } = setup('FREE', 600, 400);
+    const { billing, env } = setup('FREE', 1200, 800);
     await expect(billing.assertWithinQuota(env)).rejects.toBeInstanceOf(HttpException);
   });
 
