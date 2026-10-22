@@ -16,8 +16,11 @@ async function main() {
       console.error(matches.length ? `"${orgRef}" matches ${matches.length} organizations; use the id.` : `No organization "${orgRef}".`);
       process.exit(1);
     }
+    const previous = matches[0].plan;
     const org = await prisma.organization.update({ where: { id: matches[0].id }, data: { plan } });
-    console.log(`${org.name} (${org.id}) is now on ${org.plan}.`);
+    // Operator action: no user actor.
+    await prisma.auditEvent.create({ data: { orgId: org.id, action: 'plan.changed', target: plan, metadata: { from: previous } } });
+    console.log(`${org.name} (${org.id}) is now on ${org.plan} (was ${previous}).`);
   } finally {
     await prisma.$disconnect();
   }
