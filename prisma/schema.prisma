@@ -139,6 +139,7 @@ model Environment {
   linkTokens    LinkToken[]
   messages      Message[]
   verifications Verification[]
+  deliveries    WebhookDelivery[]
 
   @@unique([orgId, type])
 }
@@ -278,4 +279,37 @@ model Verification {
 
   @@index([environmentId, createdAt])
   @@index([telegramChatId, status])
+}
+
+// ---------- Webhook delivery log ----------
+
+enum DeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+
+// One row per event sent to an organization's webhook URL. Its id is the event id
+// (x-telenotify-event-id), so receivers and the portal refer to the same thing.
+model WebhookDelivery {
+  id            String         @id
+  environmentId String
+  event         String
+  payload       Json
+  // Set for message.* events, to show them on the message detail page.
+  messageId     String?
+  status        DeliveryStatus @default(PENDING)
+  attempts      Int            @default(0)
+  // [{ at, statusCode?, error?, durationMs }], newest last.
+  attemptLog    Json           @default("[]")
+  lastStatusCode Int?
+  lastError     String?
+  deliveredAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@index([environmentId, createdAt])
+  @@index([messageId])
 }
