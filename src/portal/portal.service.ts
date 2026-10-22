@@ -124,6 +124,56 @@ export class PortalService {
     return this.webhooks.sendTest(environment);
   }
 
+  // ---------- Analytics ----------
+
+  // Daily outcomes for the last `days` days (UTC), plus the headline numbers for Get started.
+  async analytics(environment: Environment, days: number) {
+    const span = Math.min(Math.max(days, 7), 90);
+    const since = new Date();
+    since.setUTCHours(0, 0, 0, 0);
+    since.setUTCDate(since.getUTCDate() - (span - 1));
+
+    const rows = await this.prisma.$queryRaw<{ day: Date; status: string; count: bigint }[]>`
+      SELECT date_trunc('day', "createdAt" AT TIME ZONE 'UTC') AS day, status::text AS status, count(*) AS count
+      FROM "Message"
+      WHERE "environmentId" = ${environment.id} AND "createdAt" >= ${since}
+      GROUP BY 1, 2`;
+    const daily = Array.from({ length: span }, (_, i) => {
+      const date = new Date(since);
+      date.setUTCDate(since.getUTCDate() + i);
+      return { date: date.toISOString().slice(0, 10), sent: 0, undeliverable: 0, failed: 0, received: 0 };
+    });
+    const byDate = new Map(daily.map((d) => [d.date, d]));
+    for (const row of rows) {
+      const bucket = byDate.get(new Date(row.day).toISOString().slice(0, 10));
+      const key = row.status.toLowerCase() as 'sent' | 'undeliverable' | 'failed' | 'received';
+      if (bucket && key in bucket) bucket[key] += Number(row.count);
+    }
+
+    const totals = daily.reduce(
+      (t, d) => ({ sent: t.sent + d.sent, undeliverable: t.undeliverable + d.undeliverable, failed: t.failed + d.failed, received: t.received + d.received }),
+      { sent: 0, undeliverable: 0, failed: 0, received: 0 },
+    );
+    const [verified, customers, reachable] = await Promise.all([
+      this.prisma.verification.count({ where: { environmentId: environment.id, status: 'VERIFIED', verifiedAt: { gte: since } } }),
+      this.prisma.customer.count({ where: { environmentId: environment.id, externalId: { notIn: Object.keys(TEST_CUSTOMERS) } } }),
+      this.prisma.customer.count({
+        where: { environmentId: environment.id, externalId: { notIn: Object.keys(TEST_CUSTOMERS) }, telegramChatId: { not: null }, blockedAt: null },
+      }),
+    ]);
+    const attempted = totals.sent + totals.undeliverable + totals.failed;
+    const smsPrice = Number(this.config.get('SMS_REFERENCE_PRICE_ETB', 0.25));
+    return {
+      days: span,
+      daily,
+      totals: { ...totals, verified },
+      deliveryRate: attempted ? totals.sent / attempted : null,
+      reachable: { customers, reachable, share: customers ? reachable / customers : null },
+      // Every message sent and phone verified on Telegram is an SMS you didn't pay for.
+      smsSaved: { count: totals.sent + verified, etb: (totals.sent + verified) * smsPrice, pricePerSmsEtb: smsPrice },
+    };
+  }
+
   // ---------- Message detail ----------
 
   // Everything a developer needs to debug one message: its lifecycle, the request

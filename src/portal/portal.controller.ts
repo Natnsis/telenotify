@@ -112,6 +112,11 @@ export class PortalController {
     return this.messages.list(environment, { customer: customer || undefined, status, cursor, limit });
   }
 
+  @Get(':orgId/envs/:env/analytics')
+  analytics(@CurrentEnvironment() environment: EnvironmentWithOrg, @Query('days', new ParseIntPipe({ optional: true })) days?: number) {
+    return this.portal.analytics(environment, days ?? 14);
+  }
+
   @Get(':orgId/envs/:env/messages/:messageId')
   messageDetail(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('messageId') messageId: string) {
     return this.portal.messageDetail(environment, messageId);
