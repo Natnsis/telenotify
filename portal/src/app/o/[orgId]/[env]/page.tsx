@@ -1,19 +1,21 @@
 'use client';
 
-import { ArrowRight, Bot, Check, MessageSquare, Send, Users } from 'lucide-react';
+import { ArrowRight, BarChart3, Bot, Check, MessageSquare, PiggyBank, Send, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import useSWR from 'swr';
+import { OutcomesChart } from '@/components/outcomes-chart';
 import { Badge, Card, CodeBlock, cn, Skeleton } from '@/components/ui';
 import { API_BASE_URL, fetcher } from '@/lib/api';
 import { envPath, useEnvironment, useOrg, useOrgParams } from '@/lib/hooks';
-import type { ApiKey } from '@/lib/types';
+import type { Analytics, ApiKey } from '@/lib/types';
 
 export default function GetStartedPage() {
   const { orgId, env } = useOrgParams();
   const { data: org } = useOrg();
   const { data: environment } = useEnvironment();
   const { data: keys } = useSWR<ApiKey[]>(`${envPath(orgId, env)}/keys`, fetcher);
+  const { data: analytics } = useSWR<Analytics>(`${envPath(orgId, env)}/analytics?days=14`, fetcher, { refreshInterval: 30_000 });
 
   if (!environment || !org || !keys) {
     return (
@@ -86,10 +88,40 @@ export default function GetStartedPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          icon={PiggyBank}
+          label="SMS saved · 14 days"
+          value={analytics ? formatEtb(analytics.smsSaved.etb) : '…'}
+          hint={analytics ? `${analytics.smsSaved.count.toLocaleString('en-US')} messages & verifications at ${analytics.smsSaved.pricePerSmsEtb} ETB/SMS` : undefined}
+        />
+        <Stat
+          icon={Check}
+          label="Delivery rate"
+          value={analytics?.deliveryRate == null ? '—' : `${Math.round(analytics.deliveryRate * 100)}%`}
+          hint="Sent ÷ (sent + undeliverable + failed)"
+        />
+        <Stat
+          icon={Users}
+          label="Customers on Telegram"
+          value={analytics?.reachable.share == null ? '—' : `${Math.round(analytics.reachable.share * 100)}%`}
+          hint={analytics ? `${analytics.reachable.reachable} of ${analytics.reachable.customers} reachable` : undefined}
+        />
         <Stat icon={Send} label="Messages today" value={environment.usage.messagesToday} limit={environment.usage.dailyMessageLimit} />
-        <Stat icon={Users} label="Linked Telegram users" value={environment.usage.linkedCustomers} limit={environment.usage.linkedCustomerLimit} />
-        <Stat icon={Bot} label="Bot" value={environment.botUsername ? `@${environment.botUsername}` : 'Not connected'} />
+      </div>
+
+      <Card icon={BarChart3} title="Messages per day" description="Last 14 days, by outcome. Hover a day for details.">
+        {analytics ? <OutcomesChart daily={analytics.daily} /> : <Skeleton className="h-48" />}
+      </Card>
+
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface px-5 py-3 text-sm shadow-soft">
+        <Bot className="size-4 text-muted" />
+        <span className="text-muted">Bot</span>
+        <span className="font-medium text-ink">{environment.botUsername ? `@${environment.botUsername}` : 'Not connected'}</span>
+        <span className="ml-auto text-muted">
+          {environment.usage.linkedCustomers}
+          {environment.usage.linkedCustomerLimit !== undefined && ` / ${environment.usage.linkedCustomerLimit}`} linked Telegram users
+        </span>
       </div>
 
       <Card title="Checklist" description="Everything you need to send your first real notification.">
@@ -145,7 +177,12 @@ export default function GetStartedPage() {
   );
 }
 
-function Stat({ icon: Icon, label, value, limit }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number | string; limit?: number }) {
+// Small amounts keep their decimals so a few saved SMS don't show as "0 ETB".
+function formatEtb(value: number) {
+  return `${value.toLocaleString('en-US', { maximumFractionDigits: value < 10 ? 2 : 0 })} ETB`;
+}
+
+function Stat({ icon: Icon, label, value, limit, hint }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number | string; limit?: number; hint?: string }) {
   const pct = typeof value === 'number' && limit ? Math.min(100, (value / limit) * 100) : null;
   return (
     <div className="rounded-2xl border border-line bg-surface p-5 shadow-soft">
@@ -159,6 +196,7 @@ function Stat({ icon: Icon, label, value, limit }: { icon: React.ComponentType<{
         {value}
         {limit !== undefined && <span className="text-base font-medium text-muted"> / {limit}</span>}
       </p>
+      {hint && <p className="mt-1 truncate text-xs text-muted">{hint}</p>}
       {pct !== null && (
         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-subtle">
           <div className={cn('h-full rounded-full', pct > 80 ? 'bg-amber-500' : 'bg-brand')} style={{ width: `${pct}%` }} />
