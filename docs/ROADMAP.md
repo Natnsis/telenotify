@@ -25,8 +25,8 @@ Agreed order (2026-10-22). Tick items as they ship; keep this file current.
 - [x] Request log per API key (endpoint, status, error, timing)
 - [x] Interactive API reference in the portal + Postman collection
 
-## Batch 4b: Look and feel
-- [ ] Theme switcher: light / dark / follow system, for the portal and landing page (remembered per user)
+## Batch 4b: Look and feel ✅ (done 2026-10-22)
+- [x] Theme switcher: light / dark / follow system, for the portal and landing page (remembered per user)
 
 ## Proposed: payment-gateway readiness (from the 2026-10-22 scenario, not yet agreed)
 - [ ] Per-bot send rate limits and a priority lane so OTP/transaction messages jump ahead of bulk sends
