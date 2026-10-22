@@ -15,8 +15,9 @@ function setup(customer: object, environment: object = { id: 'env-1', type: 'LIV
   const config = { get: (_key: string, fallback: unknown) => fallback };
   const queue = { add: jest.fn() };
   const billing = { assertWithinQuota: jest.fn() };
-  const service = new MessagesService(prisma as any, customers as any, telegram as any, webhooks as any, config as any, billing as any, queue as any);
-  return { service, queue, webhooks, environment: environment as any };
+  const templates = { renderForSend: jest.fn().mockResolvedValue({ text: 'Payment of 1,250 ETB received.', locale: 'en', templateKey: 'payment_received' }) };
+  const service = new MessagesService(prisma as any, customers as any, telegram as any, webhooks as any, config as any, billing as any, templates as any, queue as any);
+  return { service, queue, webhooks, templates, environment: environment as any };
 }
 
 const linked = { id: 'c1', externalId: 'u1', telegramChatId: '111', blockedAt: null };
@@ -61,5 +62,18 @@ describe('MessagesService.send', () => {
   it('enforces the sandbox daily limit', async () => {
     const { service, environment } = setup(linked, { id: 'env-1', type: 'SANDBOX' }, { sentToday: 100 });
     await expect(service.send(environment, { to: 'u1', text: 'hi' })).rejects.toBeInstanceOf(HttpException);
+  });
+
+  it('renders a template with the customer language as fallback', async () => {
+    const { service, templates, environment } = setup({ ...linked, locale: 'am' }, { id: 'env-1', type: 'LIVE', orgId: 'org-1' });
+    const result = await service.send(environment, { to: 'u1', template: 'payment_received', params: { amount: '1,250' } });
+    expect(templates.renderForSend).toHaveBeenCalledWith('org-1', 'payment_received', { amount: '1,250' }, undefined, 'am');
+    expect(result).toMatchObject({ text: 'Payment of 1,250 ETB received.', template: 'payment_received', locale: 'en' });
+  });
+
+  it('requires exactly one of text or template', async () => {
+    const { service, environment } = setup(linked);
+    await expect(service.send(environment, { to: 'u1' } as any)).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.send(environment, { to: 'u1', text: 'x', template: 'y' })).rejects.toBeInstanceOf(BadRequestException);
   });
 });

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 import { InlineButton } from '../telegram/telegram-api.client';
 
 export class SendMessageDto {
@@ -8,11 +8,27 @@ export class SendMessageDto {
   @IsNotEmpty()
   to!: string;
 
-  @ApiProperty({ example: 'Your order #55 is out for delivery 🚚' })
+  @ApiPropertyOptional({ description: 'The message. Send either text or a template.', example: 'Your order #55 is out for delivery 🚚' })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(4096)
-  text!: string;
+  text?: string;
+
+  @ApiPropertyOptional({ description: 'Template key (create templates in the portal). Send either text or a template.', example: 'payment_received' })
+  @IsOptional()
+  @Matches(/^[a-z0-9][a-z0-9_]{1,59}$/)
+  template?: string;
+
+  @ApiPropertyOptional({ description: 'Values for the template placeholders', example: { amount: '1,250', payer: 'Abebe' } })
+  @IsOptional()
+  @IsObject()
+  params?: Record<string, string | number>;
+
+  @ApiPropertyOptional({ description: "Template language. Defaults to the customer's language, then the template's default.", enum: ['en', 'am', 'om', 'ti'] })
+  @IsOptional()
+  @IsIn(['en', 'am', 'om', 'ti'])
+  locale?: string;
 
   @ApiPropertyOptional({
     description: 'Rows of URL buttons shown under the message',

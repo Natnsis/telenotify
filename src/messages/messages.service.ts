@@ -5,6 +5,7 @@ import { Customer, Environment, Message, MessageStatus, Prisma } from '@prisma/c
 import { Queue } from 'bullmq';
 import { BillingService } from '../billing/billing.service';
 import { CustomersService } from '../customers/customers.service';
+import { TemplatesService } from '../templates/templates.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
@@ -23,6 +24,7 @@ export class MessagesService {
     private readonly webhooks: WebhooksService,
     private readonly config: ConfigService,
     private readonly billing: BillingService,
+    private readonly templates: TemplatesService,
     @InjectQueue(MESSAGES_QUEUE) private readonly queue: Queue<DeliverJob>,
   ) {}
 
@@ -40,7 +42,13 @@ export class MessagesService {
     await this.enforceSandboxLimit(environment);
     await this.billing.assertWithinQuota(environment);
 
+    if (Boolean(dto.text) === Boolean(dto.template)) {
+      throw new BadRequestException('Send either "text" or "template" (with "params"), not both');
+    }
     const customer = await this.customers.upsert(environment, dto.to);
+    const content = dto.template
+      ? await this.templates.renderForSend(environment.orgId, dto.template, dto.params, dto.locale, customer.locale)
+      : { text: dto.text!, locale: null, templateKey: null };
     const reason = !customer.telegramChatId ? 'not_linked' : customer.blockedAt ? 'blocked' : null;
     const status: MessageStatus = reason ? 'UNDELIVERABLE' : 'QUEUED';
 
@@ -53,7 +61,9 @@ export class MessagesService {
           direction: 'OUTBOUND',
           status,
           reason,
-          text: dto.text,
+          text: content.text,
+          templateKey: content.templateKey,
+          locale: content.locale,
           buttons: buttons ? (buttons as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
           idempotencyKey: dto.idempotencyKey,
           priority: dto.priority === 'high' ? 'HIGH' : 'NORMAL',
@@ -147,6 +157,8 @@ export function toMessageView(message: Message & { customer: Customer }) {
     direction: message.direction,
     status: message.status,
     priority: message.priority.toLowerCase(),
+    template: message.templateKey,
+    locale: message.locale,
     reason: message.reason,
     text: message.text,
     buttons: message.buttons,

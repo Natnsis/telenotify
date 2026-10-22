@@ -23,7 +23,7 @@ export class CustomersController {
   @Put(':externalId')
   @ApiOperation({ summary: 'Create or update a customer (phone enables linking by shared contact on live bots)' })
   async upsert(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('externalId') externalId: string, @Body() dto: UpsertCustomerDto) {
-    return this.customers.toView(await this.customers.upsert(environment, externalId, dto.phone));
+    return this.customers.toView(await this.customers.upsert(environment, externalId, dto.phone, dto.locale));
   }
 
   @Get(':externalId')

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 const PHONE = /^\+?[0-9 ()-]{9,20}$/;
 
@@ -21,4 +21,9 @@ export class UpsertCustomerDto {
   @IsOptional()
   @Matches(PHONE)
   phone?: string;
+
+  @ApiPropertyOptional({ description: 'Preferred language for templates', enum: ['en', 'am', 'om', 'ti'] })
+  @IsOptional()
+  @IsIn(['en', 'am', 'om', 'ti'])
+  locale?: string;
 }

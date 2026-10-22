@@ -30,13 +30,13 @@ export class CustomersService {
     private readonly telegram: TelegramService,
   ) {}
 
-  async upsert(environment: Environment, externalId: string, phone?: string): Promise<Customer> {
+  async upsert(environment: Environment, externalId: string, phone?: string, locale?: string): Promise<Customer> {
     if (isTestCustomer(externalId) && environment.type === 'SANDBOX') return this.upsertTestCustomer(environment, externalId);
     const normalized = phone ? normalizePhone(phone) : undefined;
     return this.prisma.customer.upsert({
       where: { environmentId_externalId: { environmentId: environment.id, externalId } },
-      create: { environmentId: environment.id, externalId, phone: normalized },
-      update: normalized ? { phone: normalized } : {},
+      create: { environmentId: environment.id, externalId, phone: normalized, locale },
+      update: { ...(normalized ? { phone: normalized } : {}), ...(locale ? { locale } : {}) },
     });
   }
 
@@ -189,6 +189,7 @@ export class CustomersService {
     return {
       externalId: customer.externalId,
       phone: customer.phone,
+      locale: customer.locale,
       // true when a message sent now would go out on Telegram.
       reachable: linked && !blocked,
       telegramLinked: linked,
