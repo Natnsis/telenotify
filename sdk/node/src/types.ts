@@ -28,8 +28,18 @@ export interface Message {
   idempotencyKey: string | null;
   error: string | null;
   attempts: number;
+  /** Set when SMS fallback is on and Telegram couldn't deliver. */
+  fallback: MessageFallback | null;
   sentAt: string | null;
   createdAt: string;
+}
+
+export interface MessageFallback {
+  channel: 'sms';
+  /** skipped: the customer has no phone number. */
+  status: 'queued' | 'sent' | 'failed' | 'skipped';
+  error: string | null;
+  at: string | null;
 }
 
 export interface SendMessageParams {
@@ -49,6 +59,8 @@ export interface SendMessageParams {
   idempotencyKey?: string;
   /** "high" for OTPs and payment/transaction alerts: sent ahead of normal messages. */
   priority?: 'normal' | 'high';
+  /** false skips SMS fallback for this message. Only matters when SMS fallback is on. */
+  fallback?: boolean;
 }
 
 export interface Customer {

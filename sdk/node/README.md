@@ -62,6 +62,17 @@ await telenotify.messages.send({
 const templates = await telenotify.templates.list(); // keys, languages, placeholders
 ```
 
+## SMS fallback
+
+Turn on SMS fallback in the portal with your AfroMessage token and we send the SMS when Telegram can't:
+
+```ts
+const message = await telenotify.messages.send({ to: 'customer_123', text: 'Loan approved' });
+message.fallback; // { channel: 'sms', status: 'queued' } when the customer isn't on Telegram
+```
+
+Without it, check `message.status === 'UNDELIVERABLE'` and send through your own provider.
+
 ## Verify a phone number without SMS
 
 ```ts
