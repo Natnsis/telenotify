@@ -12,3 +12,6 @@ export type PlanInfo = (typeof PLANS)[number];
 export function planFor(volume: number): PlanInfo {
   return PLANS.find((p) => p.monthlyQuota === null || volume <= p.monthlyQuota)!;
 }
+
+/** Typical bulk SMS price in Ethiopia: AfroMessage charges ETB 0.19838 per 1-part SMS (checked 2026-10-22). */
+export const SMS_PRICE_ETB = 0.2;

@@ -2,7 +2,7 @@
 
 import { animate, motion, useInView } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { planFor } from '@/lib/plans';
+import { planFor, SMS_PRICE_ETB } from '@/lib/plans';
 import { Reveal, SectionHeading } from './reveal';
 
 const etb = (value: number) => `${Math.round(value).toLocaleString('en-US')} ETB`;
@@ -68,7 +68,7 @@ export function Savings() {
   const [verifications, setVerifications] = useState(10_000);
   const [smsPerVerification, setSmsPerVerification] = useState(1.5);
   const [notifications, setNotifications] = useState(50_000);
-  const [price, setPrice] = useState(0.25);
+  const [price, setPrice] = useState(SMS_PRICE_ETB);
   const [telegramShare, setTelegramShare] = useState(70);
 
   const smsPerMonth = verifications * smsPerVerification + notifications;
@@ -107,7 +107,7 @@ export function Savings() {
               display={smsPerVerification.toFixed(1)}
             />
             <Slider label="Transaction & order notifications per month" value={notifications} onChange={setNotifications} min={0} max={500_000} step={1_000} display={notifications.toLocaleString('en-US')} />
-            <Slider label="Your price per SMS" value={price} onChange={setPrice} min={0.1} max={2} step={0.05} display={`${price.toFixed(2)} ETB`} />
+            <Slider label="Your price per SMS" value={price} onChange={setPrice} min={0.1} max={2} step={0.01} display={`${price.toFixed(2)} ETB`} />
             <Slider label="Customers reachable on Telegram (your estimate)" value={telegramShare} onChange={setTelegramShare} min={10} max={95} step={5} display={`${telegramShare}%`} />
           </div>
 

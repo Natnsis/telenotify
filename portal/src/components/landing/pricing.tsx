@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
-import { PLANS } from '@/lib/plans';
+import { PLANS, SMS_PRICE_ETB } from '@/lib/plans';
 import { Reveal, SectionHeading } from './reveal';
 
 const common = ['Free sandbox with test customers', 'Your own branded bot', 'Phone verification without SMS', 'Signed webhooks with retries'];
@@ -46,7 +46,7 @@ export function Pricing() {
                 </p>
                 {perMessage !== null && (
                   <p className="mt-1 text-xs text-muted">
-                    ≈ {perMessage.toFixed(3)} ETB each, vs ~0.25 ETB per SMS
+                    ≈ {perMessage.toFixed(3)} ETB each, vs ~{SMS_PRICE_ETB.toFixed(2)} ETB per SMS
                   </p>
                 )}
                 <ul className="mt-6 space-y-2.5 text-sm text-muted">
