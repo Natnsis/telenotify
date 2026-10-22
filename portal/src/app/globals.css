@@ -12,10 +12,30 @@
   --brand-soft: #e0f2fe;
   --accent: #6366f1;
   --shadow: 15 23 42;
+  color-scheme: light;
+}
+
+/*
+ * Theme: <html data-theme="light|dark|system"> (set before paint by the script in
+ * layout.tsx). "system" (or no attribute, e.g. without JavaScript) follows the OS.
+ */
+:root[data-theme='dark'] {
+  --page: #070b14;
+  --surface: #0d1320;
+  --subtle: #141b2b;
+  --line: #1f2937;
+  --ink: #e5e9f0;
+  --muted: #8b95a7;
+  --brand: #38bdf8;
+  --brand-dark: #0ea5e9;
+  --brand-soft: #0c2a3d;
+  --accent: #818cf8;
+  --shadow: 0 0 0;
+  color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']):not([data-theme='dark']) {
     --page: #070b14;
     --surface: #0d1320;
     --subtle: #141b2b;
@@ -27,6 +47,19 @@
     --brand-soft: #0c2a3d;
     --accent: #818cf8;
     --shadow: 0 0 0;
+    color-scheme: dark;
+  }
+}
+
+/* Tailwind's dark: variant follows the same rule as the tokens above. */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme='light']):not([data-theme='dark']), :root:not([data-theme='light']):not([data-theme='dark']) *) {
+      @slot;
+    }
   }
 }
 
