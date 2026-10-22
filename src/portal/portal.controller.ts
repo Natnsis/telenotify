@@ -5,6 +5,7 @@ import type { Request } from 'express';
 import { OrgAccessGuard } from '../common/org-access.guard';
 import { CurrentEnvironment, CurrentUser, EnvironmentWithOrg } from '../common/request-context';
 import { AuditService } from '../audit/audit.service';
+import { RequestLogService } from '../request-log/request-log.service';
 import { SessionGuard } from '../common/session.guard';
 import { CustomersService } from '../customers/customers.service';
 import { BillingService } from '../billing/billing.service';
@@ -26,6 +27,7 @@ export class PortalController {
     private readonly billing: BillingService,
     private readonly webhooks: WebhooksService,
     private readonly audit: AuditService,
+    private readonly requestLog: RequestLogService,
   ) {}
 
   @Post()
@@ -83,6 +85,17 @@ export class PortalController {
   @Delete(':orgId/envs/:env/bot')
   disconnectBot(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User) {
     return this.portal.disconnectBot(environment, user);
+  }
+
+  @Get(':orgId/envs/:env/requests')
+  apiRequests(
+    @CurrentEnvironment() environment: EnvironmentWithOrg,
+    @Query('keyId') keyId?: string,
+    @Query('errorsOnly', new ParseBoolPipe({ optional: true })) errorsOnly?: boolean,
+    @Query('cursor') cursor?: string,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+  ) {
+    return this.requestLog.list(environment, { apiKeyId: keyId || undefined, errorsOnly, cursor, limit });
   }
 
   @Get(':orgId/envs/:env/keys')
