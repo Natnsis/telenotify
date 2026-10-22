@@ -11,6 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { validateButtons } from './buttons';
+import { toMessageView } from './message-view';
 import { DeliverJob, JOB_PRIORITY, MESSAGES_QUEUE } from './messages.constants';
 import { SendMessageDto } from './messages.dto';
 
@@ -154,31 +155,5 @@ export class MessagesService {
   }
 }
 
-export function toMessageView(message: Message & { customer: Customer }) {
-  return {
-    id: message.id,
-    to: message.customer.externalId,
-    direction: message.direction,
-    status: message.status,
-    priority: message.priority.toLowerCase(),
-    template: message.templateKey,
-    locale: message.locale,
-    reason: message.reason,
-    text: message.text,
-    buttons: message.buttons,
-    idempotencyKey: message.idempotencyKey,
-    error: message.error,
-    attempts: message.attempts,
-    // Set when SMS fallback is on and Telegram couldn't deliver.
-    fallback: message.fallbackStatus
-      ? {
-          channel: 'sms',
-          status: message.fallbackStatus.toLowerCase(),
-          error: message.fallbackError,
-          at: message.fallbackAt,
-        }
-      : null,
-    sentAt: message.sentAt,
-    createdAt: message.createdAt,
-  };
-}
+
+export { toMessageView } from './message-view';

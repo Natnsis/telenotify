@@ -6,7 +6,7 @@ import { InlineButton, TelegramApiError } from '../telegram/telegram-api.client'
 import { TelegramService } from '../telegram/telegram.service';
 import { SmsFallbackService } from '../sms-fallback/sms-fallback.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
-import { toMessageView } from './messages.service';
+import { toMessageView } from './message-view';
 
 type LoadedMessage = Message & { customer: Customer; environment: Environment & { org: Organization } };
 

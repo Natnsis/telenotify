@@ -6,7 +6,7 @@ import { Queue } from 'bullmq';
 import { AuditService } from '../audit/audit.service';
 import { decrypt, encrypt } from '../common/crypto';
 import { normalizePhone } from '../common/phone';
-import { toMessageView } from '../messages/messages.service';
+import { toMessageView } from '../messages/message-view';
 import { PrismaService } from '../prisma/prisma.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { AfroMessageCredentials, AfroMessageError, sendAfroMessage, toAfroMessageNumber } from './afromessage.client';
