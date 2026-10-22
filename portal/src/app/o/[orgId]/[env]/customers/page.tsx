@@ -49,8 +49,8 @@ export default function CustomersPage() {
             ))}
           </div>
         ) : customers.length === 0 ? (
-          <Empty title="No customers yet" icon={Users}>
-            They appear when you create a connect link or send a message.
+          <Empty title="No customers yet" icon={Users} action={{ label: 'How customers connect', href: `/o/${orgId}/${env}/docs` }}>
+            They appear when you create a connect link, verify a phone, or send a message.
           </Empty>
         ) : (
           <Table head={['Customer', 'Telegram', 'Reachable', 'Linked']}>

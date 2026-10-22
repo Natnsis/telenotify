@@ -64,7 +64,7 @@ export default function KeysPage() {
           </div>
         ) : keys.length === 0 ? (
           <Empty title="No keys yet" icon={KeyRound}>
-            Create a key to call the API from your server.
+            Create a key with the button above, then follow the Docs to send your first message.
           </Empty>
         ) : (
           <Table head={['Name', 'Key', 'Created', 'Last used', '']}>

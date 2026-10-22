@@ -204,7 +204,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
   );
 }
 
-export function Empty({ title, icon: Icon, children }: { title: string; icon?: React.ComponentType<{ className?: string }>; children?: ReactNode }) {
+export function Empty({ title, icon: Icon, children, action }: { title: string; icon?: React.ComponentType<{ className?: string }>; children?: ReactNode; action?: { label: string; href: string } }) {
   return (
     <div className="flex flex-col items-center rounded-2xl border border-dashed border-line px-6 py-12 text-center">
       {Icon && (
@@ -214,6 +214,11 @@ export function Empty({ title, icon: Icon, children }: { title: string; icon?: R
       )}
       <p className="text-sm font-medium text-ink">{title}</p>
       {children && <div className="mt-1 max-w-sm text-sm text-muted">{children}</div>}
+      {action && (
+        <Link href={action.href} className="mt-4 inline-flex items-center rounded-xl bg-ink px-4 py-2 text-sm font-medium text-page shadow-soft transition-transform hover:-translate-y-px">
+          {action.label}
+        </Link>
+      )}
     </div>
   );
 }

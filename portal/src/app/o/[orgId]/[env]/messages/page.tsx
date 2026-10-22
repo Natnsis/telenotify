@@ -68,8 +68,12 @@ export default function MessagesPage() {
             ))}
           </div>
         ) : messages.length === 0 ? (
-          <Empty title="No messages yet" icon={Inbox}>
-            Send one from the playground or the API and it will appear here.
+          <Empty
+            title="No messages yet"
+            icon={Inbox}
+            action={env === 'sandbox' ? { label: 'Send one from the Playground', href: `/o/${orgId}/${env}/playground` } : { label: 'Read the integration guide', href: `/o/${orgId}/${env}/docs` }}
+          >
+            Send one from the {env === 'sandbox' ? 'playground' : 'API'} and it will appear here with its full timeline.
           </Empty>
         ) : (
           <Table head={['', 'Customer', 'Message', 'Status', 'Time']}>

@@ -49,7 +49,7 @@ export function DeliveryLog({ basePath, messageHref }: { basePath: string; messa
         <Skeleton className="h-32" />
       ) : rows.length === 0 ? (
         <Empty title="No events yet" icon={History}>
-          Events appear here as messages are sent, fail or get replies.
+          Set a webhook URL above, then send a message. Every event and each delivery attempt appears here.
         </Empty>
       ) : (
         <Table head={['Event', 'Status', 'Attempts', 'Last response', 'Time']}>
