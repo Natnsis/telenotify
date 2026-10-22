@@ -15,6 +15,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RequestLogModule } from './request-log/request-log.service';
 import { TeamModule } from './team/team.module';
 import { TelegramWebhookModule } from './telegram/telegram-webhook.module';
+import { TemplatesModule } from './templates/templates.module';
 import { VerificationsModule } from './verifications/verifications.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 
@@ -41,6 +42,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     PortalModule,
     TeamModule,
     CustomersModule,
+    TemplatesModule,
     MessagesModule,
     VerificationsModule,
     TelegramWebhookModule,
