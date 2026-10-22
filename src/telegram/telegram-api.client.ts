@@ -46,6 +46,10 @@ export class TelegramApiClient {
     });
   }
 
+  deleteWebhook(): Promise<boolean> {
+    return this.call('deleteWebhook', {});
+  }
+
   sendMessage(
     chatId: string,
     text: string,
