@@ -17,7 +17,10 @@ export type AuditAction =
   | 'member.removed'
   | 'member.left'
   | 'plan.changed'
-  | 'customer.unlinked';
+  | 'customer.unlinked'
+  | 'template.created'
+  | 'template.updated'
+  | 'template.deleted';
 
 export type Actor = Pick<User, 'id' | 'email'> | null;
 
