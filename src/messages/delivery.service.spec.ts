@@ -23,10 +23,11 @@ function setup(overrides: { customer?: object; environment?: object; message?: o
   const bot = { sendMessage: jest.fn().mockResolvedValue({ message_id: 42 }) };
   const telegram = { clientForEnvironment: jest.fn().mockReturnValue(bot) };
   const webhooks = { emit: jest.fn() };
-  const service = new DeliveryService(prisma as any, telegram as any, webhooks as any);
+  const smsFallback = { trigger: jest.fn().mockImplementation((_env, m) => Promise.resolve(m)) };
+  const service = new DeliveryService(prisma as any, telegram as any, webhooks as any, smsFallback as any);
   const finalUpdate = () => prisma.message.update.mock.calls.at(-1)![0].data;
   const events = () => webhooks.emit.mock.calls.map((c) => c[1]);
-  return { service, prisma, bot, webhooks, finalUpdate, events };
+  return { service, prisma, bot, webhooks, smsFallback, finalUpdate, events };
 }
 
 describe('DeliveryService', () => {
@@ -113,5 +114,11 @@ describe('DeliveryService', () => {
       await service.deliver('msg-1', false);
       expect(bot.sendMessage).toHaveBeenCalled();
     });
+  });
+
+  it('offers undeliverable and failed messages to SMS fallback before emitting', async () => {
+    const { service, smsFallback } = setup({ customer: { telegramChatId: null } });
+    await service.deliver('msg-1', false);
+    expect(smsFallback.trigger).toHaveBeenCalledWith(expect.objectContaining({ id: 'env-1' }), expect.objectContaining({ status: 'UNDELIVERABLE' }));
   });
 });

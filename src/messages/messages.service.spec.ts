@@ -16,8 +16,9 @@ function setup(customer: object, environment: object = { id: 'env-1', type: 'LIV
   const queue = { add: jest.fn() };
   const billing = { assertWithinQuota: jest.fn() };
   const templates = { renderForSend: jest.fn().mockResolvedValue({ text: 'Payment of 1,250 ETB received.', locale: 'en', templateKey: 'payment_received' }) };
-  const service = new MessagesService(prisma as any, customers as any, telegram as any, webhooks as any, config as any, billing as any, templates as any, queue as any);
-  return { service, queue, webhooks, templates, environment: environment as any };
+  const smsFallback = { trigger: jest.fn().mockImplementation((_env, m) => Promise.resolve({ ...m, fallbackStatus: 'QUEUED' })) };
+  const service = new MessagesService(prisma as any, customers as any, telegram as any, webhooks as any, config as any, billing as any, templates as any, smsFallback as any, queue as any);
+  return { service, queue, webhooks, templates, smsFallback, environment: environment as any };
 }
 
 const linked = { id: 'c1', externalId: 'u1', telegramChatId: '111', blockedAt: null };
@@ -75,5 +76,19 @@ describe('MessagesService.send', () => {
     const { service, environment } = setup(linked);
     await expect(service.send(environment, { to: 'u1' } as any)).rejects.toBeInstanceOf(BadRequestException);
     await expect(service.send(environment, { to: 'u1', text: 'x', template: 'y' })).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('starts SMS fallback for an unlinked customer and reports it in the response', async () => {
+    const { service, smsFallback, queue, environment } = setup({ ...linked, telegramChatId: null });
+    const result = await service.send(environment, { to: 'u1', text: 'hi' });
+    expect(smsFallback.trigger).toHaveBeenCalled();
+    expect(queue.add).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ status: 'UNDELIVERABLE', fallback: { channel: 'sms', status: 'queued' } });
+  });
+
+  it('stores the per-message fallback opt-out', async () => {
+    const { service, smsFallback, environment } = setup({ ...linked, telegramChatId: null });
+    await service.send(environment, { to: 'u1', text: 'hi', fallback: false });
+    expect(smsFallback.trigger.mock.calls[0][1]).toMatchObject({ smsFallback: false });
   });
 });
