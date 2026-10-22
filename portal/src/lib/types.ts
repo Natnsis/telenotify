@@ -138,3 +138,20 @@ export interface MessageDetail extends Message {
   request: Record<string, unknown> | null;
   events: WebhookDelivery[];
 }
+
+export interface DayOutcome {
+  date: string;
+  sent: number;
+  undeliverable: number;
+  failed: number;
+  received: number;
+}
+
+export interface Analytics {
+  days: number;
+  daily: DayOutcome[];
+  totals: { sent: number; undeliverable: number; failed: number; received: number; verified: number };
+  deliveryRate: number | null;
+  reachable: { customers: number; reachable: number; share: number | null };
+  smsSaved: { count: number; etb: number; pricePerSmsEtb: number };
+}
