@@ -22,11 +22,24 @@ function setup(customer: object, environment: object = { id: 'env-1', type: 'LIV
 const linked = { id: 'c1', externalId: 'u1', telegramChatId: '111', blockedAt: null };
 
 describe('MessagesService.send', () => {
-  it('queues a message for a reachable customer', async () => {
+  it('queues a message for a reachable customer, rate-limited per bot', async () => {
     const { service, queue, environment } = setup(linked);
     const result = await service.send(environment, { to: 'u1', text: 'hi' });
-    expect(result).toMatchObject({ status: 'QUEUED', reason: null });
-    expect(queue.add).toHaveBeenCalledWith('deliver', { messageId: 'msg-1' }, { jobId: 'msg-1' });
+    expect(result).toMatchObject({ status: 'QUEUED', reason: null, priority: 'normal' });
+    expect(queue.add).toHaveBeenCalledWith('deliver', { messageId: 'msg-1', botKey: 'env-1' }, { jobId: 'msg-1', priority: 10 });
+  });
+
+  it('queues high-priority messages ahead of normal ones', async () => {
+    const { service, queue, environment } = setup(linked);
+    const result = await service.send(environment, { to: 'u1', text: 'Your code is 4821', priority: 'high' });
+    expect(result.priority).toBe('high');
+    expect(queue.add.mock.calls[0][2]).toEqual({ jobId: 'msg-1', priority: 1 });
+  });
+
+  it('uses one shared rate-limit bucket for the sandbox bot', async () => {
+    const { service, queue } = setup(linked, { id: 'env-9', type: 'SANDBOX' });
+    await service.send({ id: 'env-9', type: 'SANDBOX' } as any, { to: 'u1', text: 'hi' });
+    expect(queue.add.mock.calls[0][1].botKey).toBe('sandbox');
   });
 
   it.each([

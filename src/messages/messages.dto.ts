@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { InlineButton } from '../telegram/telegram-api.client';
 
 export class SendMessageDto {
@@ -27,4 +27,13 @@ export class SendMessageDto {
   @IsString()
   @MaxLength(128)
   idempotencyKey?: string;
+
+  @ApiPropertyOptional({
+    description: 'Use "high" for OTPs and payment/transaction alerts: they are sent ahead of normal messages.',
+    enum: ['normal', 'high'],
+    default: 'normal',
+  })
+  @IsOptional()
+  @IsIn(['normal', 'high'])
+  priority?: 'normal' | 'high';
 }

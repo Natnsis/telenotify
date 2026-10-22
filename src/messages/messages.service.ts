@@ -9,7 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { validateButtons } from './buttons';
-import { DeliverJob, MESSAGES_QUEUE } from './messages.constants';
+import { DeliverJob, JOB_PRIORITY, MESSAGES_QUEUE } from './messages.constants';
 import { SendMessageDto } from './messages.dto';
 
 export type MessageView = ReturnType<typeof toMessageView>;
@@ -56,6 +56,7 @@ export class MessagesService {
           text: dto.text,
           buttons: buttons ? (buttons as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
           idempotencyKey: dto.idempotencyKey,
+          priority: dto.priority === 'high' ? 'HIGH' : 'NORMAL',
         },
         include: { customer: true },
       });
@@ -69,7 +70,11 @@ export class MessagesService {
     }
 
     if (status === 'QUEUED') {
-      await this.queue.add('deliver', { messageId: message.id }, { jobId: message.id });
+      await this.queue.add(
+        'deliver',
+        { messageId: message.id, botKey: environment.type === 'SANDBOX' ? 'sandbox' : environment.id },
+        { jobId: message.id, priority: JOB_PRIORITY[message.priority] },
+      );
     } else {
       await this.webhooks.emit(environment, 'message.undeliverable', toMessageView(message));
     }
@@ -141,6 +146,7 @@ export function toMessageView(message: Message & { customer: Customer }) {
     to: message.customer.externalId,
     direction: message.direction,
     status: message.status,
+    priority: message.priority.toLowerCase(),
     reason: message.reason,
     text: message.text,
     buttons: message.buttons,

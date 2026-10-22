@@ -6,6 +6,7 @@ function setup(overrides: { customer?: object; environment?: object; message?: o
   const message = {
     id: 'msg-1',
     status: 'QUEUED',
+    priority: 'NORMAL',
     text: 'Order shipped',
     buttons: [[{ text: 'Track', url: 'https://x.test/55' }]],
     customer,
