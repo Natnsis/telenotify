@@ -4,6 +4,7 @@ import { Membership, Organization, Role, User } from '@prisma/client';
 import { randomToken, sha256 } from '../common/crypto';
 import { AuditService } from '../audit/audit.service';
 import { MailService } from '../mail/mail.service';
+import { AuthService } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const INVITE_DAYS = 7;
@@ -17,7 +18,35 @@ export class TeamService {
     private readonly mail: MailService,
     private readonly config: ConfigService,
     private readonly audit: AuditService,
+    private readonly auth: AuthService,
   ) {}
+
+  // ---------- Organization settings ----------
+
+  async renameOrg(membership: MembershipWithOrg, actor: User, name: string) {
+    this.assertOwner(membership);
+    const org = await this.prisma.organization.update({ where: { id: membership.orgId }, data: { name: name.trim() } });
+    await this.audit.record(org.id, actor, 'org.renamed', org.name, { from: membership.org.name });
+    return { id: org.id, name: org.name };
+  }
+
+  async leaveOrg(membership: MembershipWithOrg, user: User) {
+    const members = await this.prisma.membership.findMany({ where: { orgId: membership.orgId } });
+    if (members.length === 1) throw new BadRequestException('You are the only member. Delete the organization instead.');
+    if (membership.role === 'OWNER' && members.filter((m) => m.role === 'OWNER').length === 1) {
+      throw new BadRequestException('You are the only owner. Invite another owner before leaving.');
+    }
+    await this.prisma.membership.delete({ where: { userId_orgId: { userId: user.id, orgId: membership.orgId } } });
+    await this.audit.record(membership.orgId, user, 'member.left', user.email);
+  }
+
+  async deleteOrg(membership: MembershipWithOrg, confirmName: string) {
+    this.assertOwner(membership);
+    if (confirmName.trim() !== membership.org.name) throw new BadRequestException('Type the organization name exactly to confirm');
+    const environments = await this.prisma.environment.findMany({ where: { orgId: membership.orgId } });
+    await this.auth.releaseLiveBot(environments);
+    await this.prisma.organization.delete({ where: { id: membership.orgId } });
+  }
 
   async overview(org: Organization) {
     const [members, invitations] = await Promise.all([

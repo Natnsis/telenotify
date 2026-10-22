@@ -22,7 +22,8 @@ function setup(overrides: Record<string, any> = {}) {
   const mail = { send: jest.fn() };
   const config = { getOrThrow: () => 'http://portal.test' };
   const audit = { record: jest.fn() };
-  return { team: new TeamService(prisma, mail as any, config as any, audit as any), prisma, mail, audit };
+  const auth = { releaseLiveBot: jest.fn() };
+  return { team: new TeamService(prisma, mail as any, config as any, audit as any, auth as any), prisma, mail, audit, auth };
 }
 
 describe('TeamService', () => {
@@ -71,5 +72,21 @@ describe('TeamService', () => {
     prisma.membership.findUnique.mockResolvedValue({ role: 'OWNER' });
     prisma.membership.count.mockResolvedValue(1);
     await expect(team.removeMember(owner, inviter, 'u-owner')).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('blocks the last owner from leaving', async () => {
+    const { team, prisma } = setup();
+    prisma.membership.findMany = jest.fn().mockResolvedValue([{ role: 'OWNER' }, { role: 'MEMBER' }]);
+    await expect(team.leaveOrg(owner, inviter)).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('deletes an organization only with the exact name, releasing its live bot', async () => {
+    const { team, prisma, auth } = setup();
+    prisma.environment = { findMany: jest.fn().mockResolvedValue([{ type: 'LIVE', botTokenEncrypted: 'x' }]) };
+    prisma.organization = { delete: jest.fn() };
+    await expect(team.deleteOrg(owner, 'mela loans')).rejects.toBeInstanceOf(BadRequestException);
+    await team.deleteOrg(owner, 'Mela Loans');
+    expect(auth.releaseLiveBot).toHaveBeenCalled();
+    expect(prisma.organization.delete).toHaveBeenCalledWith({ where: { id: 'org-1' } });
   });
 });

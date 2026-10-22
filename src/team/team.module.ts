@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { InvitationsController, TeamController } from './team.controller';
+import { AuthModule } from '../auth/auth.module';
+import { InvitationsController, OrgSettingsController, TeamController } from './team.controller';
 import { TeamService } from './team.service';
 
 @Module({
-  controllers: [TeamController, InvitationsController],
+  imports: [AuthModule],
+  controllers: [TeamController, InvitationsController, OrgSettingsController],
   providers: [TeamService],
 })
 export class TeamModule {}

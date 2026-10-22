@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Role, User } from '@prisma/client';
-import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import type { Request } from 'express';
 import { OrgAccessGuard } from '../common/org-access.guard';
 import { CurrentUser } from '../common/request-context';
@@ -23,7 +23,43 @@ class AcceptDto {
   token!: string;
 }
 
+class RenameOrgDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  name!: string;
+}
+
+class DeleteOrgDto {
+  @IsString()
+  confirmName!: string;
+}
+
 type OrgRequest = Request & { membership: MembershipWithOrg };
+
+@ApiExcludeController()
+@UseGuards(SessionGuard, OrgAccessGuard)
+@Controller('portal/orgs/:orgId')
+export class OrgSettingsController {
+  constructor(private readonly team: TeamService) {}
+
+  @Patch()
+  rename(@Req() req: OrgRequest, @CurrentUser() user: User, @Body() dto: RenameOrgDto) {
+    return this.team.renameOrg(req.membership, user, dto.name);
+  }
+
+  @Post('leave')
+  @HttpCode(204)
+  leave(@Req() req: OrgRequest, @CurrentUser() user: User) {
+    return this.team.leaveOrg(req.membership, user);
+  }
+
+  @Delete()
+  @HttpCode(204)
+  remove(@Req() req: OrgRequest, @Body() dto: DeleteOrgDto) {
+    return this.team.deleteOrg(req.membership, dto.confirmName);
+  }
+}
 
 @ApiExcludeController()
 @UseGuards(SessionGuard, OrgAccessGuard)
