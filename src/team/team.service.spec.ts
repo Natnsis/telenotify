@@ -21,7 +21,8 @@ function setup(overrides: Record<string, any> = {}) {
   };
   const mail = { send: jest.fn() };
   const config = { getOrThrow: () => 'http://portal.test' };
-  return { team: new TeamService(prisma, mail as any, config as any), prisma, mail };
+  const audit = { record: jest.fn() };
+  return { team: new TeamService(prisma, mail as any, config as any, audit as any), prisma, mail, audit };
 }
 
 describe('TeamService', () => {
@@ -32,6 +33,12 @@ describe('TeamService', () => {
     expect(data.email).toBe('new@example.com');
     const token = /token=([\w-]+)/.exec(mail.send.mock.calls[0][2])![1];
     expect(data.tokenHash).toBe(sha256(token));
+  });
+
+  it('records invitations in the audit log', async () => {
+    const { team, audit } = setup();
+    await team.invite(owner, inviter, 'new@example.com', 'MEMBER');
+    expect(audit.record).toHaveBeenCalledWith('org-1', inviter, 'member.invited', 'new@example.com', { role: 'MEMBER' });
   });
 
   it('only lets owners invite', async () => {
@@ -63,6 +70,6 @@ describe('TeamService', () => {
     const { team, prisma } = setup();
     prisma.membership.findUnique.mockResolvedValue({ role: 'OWNER' });
     prisma.membership.count.mockResolvedValue(1);
-    await expect(team.removeMember(owner, 'u-owner')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(team.removeMember(owner, inviter, 'u-owner')).rejects.toBeInstanceOf(BadRequestException);
   });
 });

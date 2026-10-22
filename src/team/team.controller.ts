@@ -43,14 +43,14 @@ export class TeamController {
 
   @Delete('invitations/:invitationId')
   @HttpCode(204)
-  revoke(@Req() req: OrgRequest, @Param('invitationId') invitationId: string) {
-    return this.team.revokeInvitation(req.membership, invitationId);
+  revoke(@Req() req: OrgRequest, @CurrentUser() user: User, @Param('invitationId') invitationId: string) {
+    return this.team.revokeInvitation(req.membership, user, invitationId);
   }
 
   @Delete('members/:userId')
   @HttpCode(204)
-  remove(@Req() req: OrgRequest, @Param('userId') userId: string) {
-    return this.team.removeMember(req.membership, userId);
+  remove(@Req() req: OrgRequest, @CurrentUser() user: User, @Param('userId') userId: string) {
+    return this.team.removeMember(req.membership, user, userId);
   }
 }
 

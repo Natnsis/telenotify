@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { ConfigService } from '@nestjs/config';
 import { Membership, Organization, Role, User } from '@prisma/client';
 import { randomToken, sha256 } from '../common/crypto';
+import { AuditService } from '../audit/audit.service';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -15,6 +16,7 @@ export class TeamService {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private readonly config: ConfigService,
+    private readonly audit: AuditService,
   ) {}
 
   async overview(org: Organization) {
@@ -53,24 +55,28 @@ export class TeamService {
       `${inviter.name} invited you to ${membership.org.name} on Telenotify`,
       `Hi,\n\n${inviter.name} (${inviter.email}) invited you to join ${membership.org.name} on Telenotify as ${role === 'OWNER' ? 'an owner' : 'a member'}.\n\nAccept the invitation:\n${portal}/invite?token=${token}\n\nThis link expires in ${INVITE_DAYS} days.`,
     );
+    await this.audit.record(membership.orgId, inviter, 'member.invited', email, { role });
     return { id: invitation.id, email, role, expiresAt: invitation.expiresAt, createdAt: invitation.createdAt };
   }
 
-  async revokeInvitation(membership: MembershipWithOrg, invitationId: string) {
+  async revokeInvitation(membership: MembershipWithOrg, actor: User, invitationId: string) {
     this.assertOwner(membership);
-    const result = await this.prisma.invitation.deleteMany({ where: { id: invitationId, orgId: membership.orgId, acceptedAt: null } });
-    if (result.count === 0) throw new NotFoundException('Invitation not found');
+    const invitation = await this.prisma.invitation.findFirst({ where: { id: invitationId, orgId: membership.orgId, acceptedAt: null } });
+    if (!invitation) throw new NotFoundException('Invitation not found');
+    await this.prisma.invitation.delete({ where: { id: invitation.id } });
+    await this.audit.record(membership.orgId, actor, 'invitation.revoked', invitation.email);
   }
 
-  async removeMember(membership: MembershipWithOrg, userId: string) {
+  async removeMember(membership: MembershipWithOrg, actor: User, userId: string) {
     this.assertOwner(membership);
-    const target = await this.prisma.membership.findUnique({ where: { userId_orgId: { userId, orgId: membership.orgId } } });
+    const target = await this.prisma.membership.findUnique({ where: { userId_orgId: { userId, orgId: membership.orgId } }, include: { user: true } });
     if (!target) throw new NotFoundException('Member not found');
     if (target.role === 'OWNER') {
       const owners = await this.prisma.membership.count({ where: { orgId: membership.orgId, role: 'OWNER' } });
       if (owners <= 1) throw new BadRequestException('An organization needs at least one owner');
     }
     await this.prisma.membership.delete({ where: { userId_orgId: { userId, orgId: membership.orgId } } });
+    await this.audit.record(membership.orgId, actor, 'member.removed', target.user.email);
   }
 
   // Shown on the invite page before the person signs in.
@@ -93,6 +99,7 @@ export class TeamService {
       }),
       this.prisma.invitation.update({ where: { id: invitation.id }, data: { acceptedAt: new Date() } }),
     ]);
+    await this.audit.record(invitation.orgId, user, 'member.joined', user.email, { role: invitation.role });
     return { orgId: invitation.orgId, orgName: invitation.org.name };
   }
 
