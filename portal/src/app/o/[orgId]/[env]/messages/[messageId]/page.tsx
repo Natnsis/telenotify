@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDownLeft, ArrowLeft, Check, CircleDot, Code2, History, Send, User, XCircle } from 'lucide-react';
+import { ArrowDownLeft, ArrowLeft, Check, CircleDot, Code2, History, MessageSquareText, Send, User, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
@@ -10,7 +10,7 @@ import { Badge, Card, CodeBlock, Empty, formatDate, PageHeader, Skeleton, Table,
 import { DeliveryDialog, DeliveryStatusBadge, lastResponse } from '@/components/webhook-delivery';
 import { API_BASE_URL, ApiError, fetcher } from '@/lib/api';
 import { envPath, useOrgParams } from '@/lib/hooks';
-import type { MessageDetail, WebhookDelivery } from '@/lib/types';
+import type { MessageDetail, MessageFallback, WebhookDelivery } from '@/lib/types';
 
 const reasons: Record<string, string> = {
   not_linked: 'The customer has not connected Telegram yet. Send this through your fallback (SMS/email).',
@@ -82,6 +82,7 @@ export default function MessageDetailPage() {
               </div>
             )}
             {m.error && <p className="mt-3 font-mono text-xs text-red-600 dark:text-red-400">{m.error}</p>}
+            {m.fallback && <FallbackResult fallback={m.fallback} sandbox={env === 'sandbox'} href={`/o/${orgId}/${env}/sms-fallback`} />}
           </Card>
 
           {curl && (
@@ -164,5 +165,36 @@ export default function MessageDetailPage() {
 
       <DeliveryDialog delivery={selected} basePath={base} onClose={() => setSelected(null)} onResent={() => mutate()} />
     </>
+  );
+}
+
+const fallbackCopy: Record<MessageFallback['status'], { tone: 'blue' | 'green' | 'red' | 'gray'; label: string; text: string }> = {
+  queued: { tone: 'blue', label: 'SMS queued', text: 'Sending the same text by SMS through AfroMessage.' },
+  sent: { tone: 'green', label: 'SMS sent', text: 'Delivered to AfroMessage as an SMS.' },
+  failed: { tone: 'red', label: 'SMS failed', text: 'AfroMessage could not send the SMS.' },
+  skipped: { tone: 'gray', label: 'SMS skipped', text: 'SMS fallback is on, but this customer has no phone number.' },
+};
+
+function FallbackResult({ fallback, sandbox, href }: { fallback: MessageFallback; sandbox: boolean; href: string }) {
+  const copy = fallbackCopy[fallback.status];
+  const text = sandbox && fallback.status === 'sent' ? 'Simulated in the sandbox: no SMS was sent. In live, this goes through your AfroMessage account.' : copy.text;
+  return (
+    <div className="mt-4 flex items-start gap-3 rounded-xl border border-line px-4 py-3 text-sm">
+      <MessageSquareText className="mt-0.5 size-4 shrink-0 text-muted" />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone={copy.tone} dot>
+            {copy.label}
+            {sandbox && fallback.status === 'sent' ? ' (simulated)' : ''}
+          </Badge>
+          {fallback.at && <span className="text-xs text-muted">{timeAgo(fallback.at)}</span>}
+          <Link href={href} className="ml-auto text-xs text-brand hover:underline">
+            SMS fallback settings
+          </Link>
+        </div>
+        <p className="mt-1 text-muted">{text}</p>
+        {fallback.error && fallback.status !== 'skipped' && <p className="mt-1 break-words font-mono text-xs text-red-600 dark:text-red-400">{fallback.error}</p>}
+      </div>
+    </div>
   );
 }
