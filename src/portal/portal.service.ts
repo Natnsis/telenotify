@@ -162,7 +162,7 @@ export class PortalService {
       }),
     ]);
     const attempted = totals.sent + totals.undeliverable + totals.failed;
-    const smsPrice = Number(this.config.get('SMS_REFERENCE_PRICE_ETB', 0.25));
+    const smsPrice = Number(this.config.get('SMS_REFERENCE_PRICE_ETB', 0.2));
     return {
       days: span,
       daily,
