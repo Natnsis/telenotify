@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { StatusBadge } from '@/components/status-badge';
 import { Alert, Button, Card, CodeBlock, Input, PageHeader } from '@/components/ui';
+import { ConnectQr } from '@/components/qr-code';
 import { VerifyCard } from '@/components/verify-card';
 import { api, ApiError, fetcher } from '@/lib/api';
 import { envPath, useEnvironment, useOrgParams, useRequireUser } from '@/lib/hooks';
@@ -92,6 +93,7 @@ export default function PlaygroundPage() {
             </Alert>
           ) : link ? (
             <div className="space-y-3">
+              <ConnectQr url={link.url} filename="telenotify-sandbox-connect" caption="Scan with your phone's camera, or open the link." />
               <a
                 href={link.url}
                 target="_blank"
