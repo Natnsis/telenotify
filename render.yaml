@@ -1,0 +1,108 @@
+# Render Blueprint for the Telenotify API (test environment, free plans).
+# The portal and landing page deploy separately on Vercel; see docs/DEPLOY.md.
+#
+# Free-plan limits to keep in mind:
+# - The API sleeps after 15 minutes without traffic and takes about a minute to wake.
+# - Free Postgres expires 30 days after creation.
+# - Free Key Value (Redis) keeps nothing across restarts, so queued jobs can be lost.
+
+services:
+  - type: web
+    name: telenotify-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    # Only redeploy when API files change, not on portal or docs commits.
+    buildFilter:
+      paths:
+        - src/**
+        - prisma/**
+        - package.json
+        - package-lock.json
+        - Dockerfile
+        - tsconfig*.json
+        - nest-cli.json
+    envVars:
+      - key: PORT
+        value: "3000"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: telenotify-db
+          property: connectionString
+      - key: REDIS_HOST
+        fromService:
+          type: keyvalue
+          name: telenotify-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: keyvalue
+          name: telenotify-redis
+          property: port
+
+      # This service's own https://….onrender.com address (Telegram webhooks).
+      - key: PUBLIC_BASE_URL
+        sync: false
+      # The Vercel portal address, e.g. https://telenotify.vercel.app
+      - key: PORTAL_URL
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      # Requests from the portal pass Vercel and then Render's proxy. Check the
+      # IPs in the portal's request log after the first deploy (docs/DEPLOY.md).
+      - key: TRUST_PROXY
+        value: "2"
+      - key: ALLOW_PRIVATE_WEBHOOK_URLS
+        value: "false"
+
+      # Secrets: you fill these in on the first deploy (see docs/DEPLOY.md for
+      # how to generate each one). Render's generated values are not used because
+      # Telegram secret tokens can't contain base64's + / = characters.
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: SANDBOX_BOT_TOKEN
+        sync: false
+      - key: SANDBOX_WEBHOOK_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SMTP_URL
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+
+      - key: SANDBOX_DAILY_MESSAGE_LIMIT
+        value: "100"
+      - key: SANDBOX_LINKED_CUSTOMER_LIMIT
+        value: "10"
+      - key: LINK_TOKEN_TTL_MINUTES
+        value: "10080"
+      - key: SMS_REFERENCE_PRICE_ETB
+        value: "0.2"
+      - key: PER_BOT_MESSAGES_PER_SECOND
+        value: "25"
+
+  - type: keyvalue
+    name: telenotify-redis
+    plan: free
+    region: frankfurt
+    # BullMQ needs this: with eviction, Redis may silently drop queued jobs.
+    maxmemoryPolicy: noeviction
+    # Reachable only from Render services in this region, not the internet.
+    ipAllowList: []
+
+databases:
+  - name: telenotify-db
+    plan: free
+    region: frankfurt
+    databaseName: telenotify
+    user: telenotify
