@@ -57,72 +57,78 @@ export default function GetStartedPage() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-3xl border border-line bg-surface p-6 shadow-soft sm:p-8">
-        <div className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-gradient-to-br from-brand/25 to-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-40 [mask-image:linear-gradient(to_left,black,transparent_60%)]" />
-        <div className="relative">
-          <Badge tone={env === 'sandbox' ? 'amber' : 'green'} dot>
-            {env === 'sandbox' ? 'Sandbox' : 'Live'}
-          </Badge>
-          <h1 className="mt-3 font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-            {env === 'sandbox' ? `Welcome to ${org.name}` : `${org.name} is ${environment.botConnected ? 'ready for' : 'almost ready for'} production`}
-          </h1>
-          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            {env === 'sandbox'
-              ? 'Try the whole flow with test data. When a customer can’t be reached on Telegram, the API tells you immediately so your own SMS or email fallback can take over.'
-              : 'Messages here reach real customers through your own bot. Finish the checklist to start sending.'}
-          </p>
-          <div className="mt-5 flex items-center gap-3">
-            <div className="h-2 w-48 overflow-hidden rounded-full bg-subtle">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${(doneCount / steps.length) * 100}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="h-full rounded-full bg-gradient-to-r from-brand to-accent"
-              />
+      <section className="relative overflow-hidden rounded-3xl border border-line bg-surface shadow-soft">
+        <div className="pointer-events-none absolute -right-24 -top-32 size-96 rounded-full bg-gradient-to-br from-brand/25 via-accent/15 to-transparent blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 left-1/3 size-80 rounded-full bg-gradient-to-tr from-pink-400/10 to-transparent blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-grid opacity-40 [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_65%)]" />
+        <div className="relative grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,300px)] lg:items-center">
+          <div>
+            <Badge tone={env === 'sandbox' ? 'amber' : 'green'} dot>
+              {env === 'sandbox' ? 'Sandbox' : 'Live'}
+            </Badge>
+            <h1 className="mt-3 font-display text-2xl font-bold tracking-tight text-ink sm:text-[2rem] sm:leading-tight">
+              {env === 'sandbox' ? `Welcome to ${org.name}` : `${org.name} is ${environment.botConnected ? 'ready for' : 'almost ready for'} production`}
+            </h1>
+            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-muted">
+              {env === 'sandbox'
+                ? 'Try the whole flow with test data. When a customer can’t be reached on Telegram, the API tells you immediately so your fallback can take over.'
+                : 'Messages here reach real customers through your own bot. Finish the checklist to start sending.'}
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-40 overflow-hidden rounded-full bg-subtle ring-1 ring-inset ring-line/60">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(doneCount / steps.length) * 100}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                    className="h-full rounded-full bg-gradient-to-r from-brand to-accent"
+                  />
+                </div>
+                <span className="text-muted">
+                  {doneCount} of {steps.length} done
+                </span>
+              </div>
+              <span className="flex items-center gap-1.5 text-muted">
+                <Bot className="size-4" />
+                <span className="font-medium text-ink">{environment.botUsername ? `@${environment.botUsername}` : 'No bot yet'}</span>
+                <span aria-hidden>·</span>
+                {environment.usage.linkedCustomers}
+                {environment.usage.linkedCustomerLimit !== undefined && ` / ${environment.usage.linkedCustomerLimit}`} linked
+              </span>
             </div>
-            <span className="text-sm text-muted">
-              {doneCount} of {steps.length} done
-            </span>
           </div>
+          <NextStep step={steps.find((step) => !step.done)} />
         </div>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
           icon={PiggyBank}
+          tone="emerald"
           label="SMS saved · 14 days"
           value={analytics ? formatEtb(analytics.smsSaved.etb) : '…'}
           hint={analytics ? `${analytics.smsSaved.count.toLocaleString('en-US')} messages & verifications at ${analytics.smsSaved.pricePerSmsEtb} ETB/SMS` : undefined}
         />
         <Stat
           icon={Check}
+          tone="sky"
           label="Delivery rate"
           value={analytics?.deliveryRate == null ? '—' : `${Math.round(analytics.deliveryRate * 100)}%`}
           hint="Sent ÷ (sent + undeliverable + failed)"
         />
         <Stat
           icon={Users}
+          tone="indigo"
           label="Customers on Telegram"
           value={analytics?.reachable.share == null ? '—' : `${Math.round(analytics.reachable.share * 100)}%`}
           hint={analytics ? `${analytics.reachable.reachable} of ${analytics.reachable.customers} reachable` : undefined}
         />
-        <Stat icon={Send} label="Messages today" value={environment.usage.messagesToday} limit={environment.usage.dailyMessageLimit} />
+        <Stat icon={Send} tone="amber" label="Messages today" value={environment.usage.messagesToday} limit={environment.usage.dailyMessageLimit} />
       </div>
 
       <Card icon={BarChart3} title="Messages per day" description="Last 14 days, by outcome. Hover a day for details.">
         {analytics ? <OutcomesChart daily={analytics.daily} /> : <Skeleton className="h-48" />}
       </Card>
-
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface px-5 py-3 text-sm shadow-soft">
-        <Bot className="size-4 text-muted" />
-        <span className="text-muted">Bot</span>
-        <span className="font-medium text-ink">{environment.botUsername ? `@${environment.botUsername}` : 'Not connected'}</span>
-        <span className="ml-auto text-muted">
-          {environment.usage.linkedCustomers}
-          {environment.usage.linkedCustomerLimit !== undefined && ` / ${environment.usage.linkedCustomerLimit}`} linked Telegram users
-        </span>
-      </div>
 
       <Card title="Checklist" description="Everything you need to send your first real notification.">
         <ol className="-my-1 divide-y divide-line">
@@ -182,26 +188,76 @@ function formatEtb(value: number) {
   return `${value.toLocaleString('en-US', { maximumFractionDigits: value < 10 ? 2 : 0 })} ETB`;
 }
 
-function Stat({ icon: Icon, label, value, limit, hint }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number | string; limit?: number; hint?: string }) {
+const statTones = {
+  emerald: 'from-emerald-500/20 to-emerald-500/5 text-emerald-600 ring-emerald-500/20 dark:text-emerald-300',
+  sky: 'from-sky-500/20 to-sky-500/5 text-sky-600 ring-sky-500/20 dark:text-sky-300',
+  indigo: 'from-indigo-500/20 to-indigo-500/5 text-indigo-600 ring-indigo-500/20 dark:text-indigo-300',
+  amber: 'from-amber-500/20 to-amber-500/5 text-amber-600 ring-amber-500/20 dark:text-amber-300',
+};
+
+function Stat({
+  icon: Icon,
+  tone,
+  label,
+  value,
+  limit,
+  hint,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  tone: keyof typeof statTones;
+  label: string;
+  value: number | string;
+  limit?: number;
+  hint?: string;
+}) {
   const pct = typeof value === 'number' && limit ? Math.min(100, (value / limit) * 100) : null;
   return (
-    <div className="rounded-2xl border border-line bg-surface p-5 shadow-soft">
-      <div className="flex items-center justify-between">
+    <div className="group rounded-2xl border border-line bg-surface p-5 shadow-soft transition-shadow hover:shadow-lift">
+      <div className="flex items-start justify-between gap-3">
         <p className="text-sm text-muted">{label}</p>
-        <span className="grid size-8 place-items-center rounded-lg bg-subtle text-muted">
-          <Icon className="size-4" />
+        <span className={cn('grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ring-1 ring-inset', statTones[tone])}>
+          <Icon className="size-[18px]" />
         </span>
       </div>
-      <p className="mt-2 truncate font-display text-2xl font-bold tabular-nums text-ink">
+      <p className="mt-1 truncate font-display text-[1.75rem] font-bold leading-tight tracking-tight tabular-nums text-ink">
         {value}
         {limit !== undefined && <span className="text-base font-medium text-muted"> / {limit}</span>}
       </p>
-      {hint && <p className="mt-1 truncate text-xs text-muted">{hint}</p>}
+      {hint && <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted">{hint}</p>}
       {pct !== null && (
         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-subtle">
-          <div className={cn('h-full rounded-full', pct > 80 ? 'bg-amber-500' : 'bg-brand')} style={{ width: `${pct}%` }} />
+          <div className={cn('h-full rounded-full', pct > 80 ? 'bg-amber-500' : 'bg-gradient-to-r from-brand to-accent')} style={{ width: `${pct}%` }} />
         </div>
       )}
+    </div>
+  );
+}
+
+type Step = { done: boolean; title: string; body: string; href: string; cta: string };
+
+function NextStep({ step }: { step?: Step }) {
+  if (!step) {
+    return (
+      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-5 backdrop-blur">
+        <span className="grid size-9 place-items-center rounded-full bg-emerald-500 text-white shadow-soft">
+          <Check className="size-5" />
+        </span>
+        <p className="mt-3 font-semibold text-ink">You&apos;re all set</p>
+        <p className="mt-1 text-sm text-muted">Every step is done. Your messages and results show up under Monitor.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-2xl border border-line bg-page/70 p-5 shadow-soft backdrop-blur">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">Next step</p>
+      <p className="mt-2 font-semibold text-ink">{step.title}</p>
+      <p className="mt-1 text-sm leading-relaxed text-muted">{step.body}</p>
+      <Link
+        href={step.href}
+        className="group mt-4 inline-flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-2 text-sm font-medium text-page shadow-soft transition-transform hover:-translate-y-px"
+      >
+        {step.cta} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+      </Link>
     </div>
   );
 }
