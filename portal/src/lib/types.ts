@@ -113,3 +113,28 @@ export interface InvitationPreview {
   role: 'OWNER' | 'MEMBER';
   invitedBy: string | null;
 }
+
+export type DeliveryStatus = 'PENDING' | 'DELIVERED' | 'FAILED';
+
+export interface WebhookDelivery {
+  id: string;
+  event: string;
+  status: DeliveryStatus;
+  attempts: number;
+  lastStatusCode: number | null;
+  lastError: string | null;
+  messageId: string | null;
+  payload: Record<string, unknown>;
+  attemptLog: { at: string; statusCode?: number; error?: string; durationMs?: number }[];
+  deliveredAt: string | null;
+  createdAt: string;
+}
+
+export interface MessageDetail extends Message {
+  telegramMessageId: string | null;
+  idempotencyKey: string | null;
+  buttons: { text: string; url: string }[][] | null;
+  customer: { externalId: string; telegramLinked: boolean; blocked: boolean; telegramUsername: string | null };
+  request: Record<string, unknown> | null;
+  events: WebhookDelivery[];
+}
