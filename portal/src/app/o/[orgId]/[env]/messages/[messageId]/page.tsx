@@ -62,7 +62,7 @@ export default function MessageDetailPage() {
         actions={<StatusBadge status={m.status} />}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div className="space-y-6">
           <Card title="Content">
             <p className="whitespace-pre-wrap rounded-xl bg-subtle p-4 text-sm text-ink">{m.text}</p>
