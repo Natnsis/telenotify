@@ -58,6 +58,10 @@ export default function DocsPage() {
             code={`curl -X POST ${API_BASE_URL}/v1/messages \\\n${h} \\\n  -d '{\n    "to": "customer_123",\n    "text": "Your order #1042 is out for delivery",\n    "buttons": [[{ "text": "Track order", "url": "https://shop.example.com/o/1042" }]],\n    "idempotencyKey": "order-1042-shipped"\n  }'`}
           />
           <p>Reusing an idempotency key returns the original message instead of sending twice.</p>
+          <p>
+            For one-time codes and payment or transaction alerts, add <code className="font-mono text-ink">&quot;priority&quot;: &quot;high&quot;</code>. High-priority messages are sent ahead of
+            normal ones. Each bot sends up to 25 messages per second; bursts above that are queued, never dropped.
+          </p>
         </Section>
 
         <Section n={3} title="Fall back when Telegram can't reach the customer">
