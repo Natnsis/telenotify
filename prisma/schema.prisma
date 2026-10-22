@@ -142,6 +142,7 @@ model Environment {
   messages      Message[]
   verifications Verification[]
   deliveries    WebhookDelivery[]
+  apiRequests   ApiRequestLog[]
 
   @@unique([orgId, type])
 }
@@ -157,9 +158,30 @@ model ApiKey {
   createdById   String?
   createdAt     DateTime  @default(now())
 
-  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  environment Environment     @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  requests    ApiRequestLog[]
 
   @@index([environmentId])
+}
+
+// One row per authenticated public API call, kept for 30 days.
+model ApiRequestLog {
+  id            String   @id @default(uuid())
+  environmentId String
+  apiKeyId      String
+  method        String
+  path          String
+  statusCode    Int
+  durationMs    Int
+  error         String?
+  ip            String?
+  createdAt     DateTime @default(now())
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  apiKey      ApiKey      @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@index([environmentId, createdAt])
+  @@index([apiKeyId, createdAt])
 }
 
 // ---------- Messaging ----------
