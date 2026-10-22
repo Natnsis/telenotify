@@ -7,6 +7,7 @@ import {
   Check,
   ChevronsUpDown,
   CreditCard,
+  FileText,
   ScrollText,
   Search,
   Settings,
@@ -53,6 +54,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     label: 'Configure',
     items: [
       { href: '/keys', label: 'API keys', icon: KeyRound },
+      { href: '/templates', label: 'Templates', icon: FileText },
       { href: '/webhooks', label: 'Webhooks', icon: Webhook },
       { href: '/bot', label: 'Telegram bot', icon: Bot },
     ],
