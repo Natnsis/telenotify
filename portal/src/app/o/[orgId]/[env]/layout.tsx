@@ -7,6 +7,7 @@ import {
   ChevronsUpDown,
   CreditCard,
   ScrollText,
+  Search,
   Settings,
   UserCog,
   FlaskConical,
@@ -26,7 +27,9 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
+import { CommandPalette } from '@/components/command-palette';
 import { Logo } from '@/components/logo';
+import { WelcomeTour } from '@/components/welcome-tour';
 import { cn, Spinner } from '@/components/ui';
 import { api, fetcher } from '@/lib/api';
 import { useOrg, useOrgParams, useRequireUser } from '@/lib/hooks';
@@ -75,6 +78,7 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
   const { data: org, error: orgError } = useOrg();
   const pathname = usePathname();
   const [drawer, setDrawer] = useState(false);
+  const [palette, setPalette] = useState(false);
   const base = `/o/${orgId}/${env}`;
   const subpath = pathname.slice(base.length);
 
@@ -143,7 +147,17 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
             <Menu className="size-5" />
           </button>
           <span className="truncate text-sm font-medium text-ink lg:hidden">{org.name}</span>
-          <div className="ml-auto">
+          <button
+            onClick={() => setPalette(true)}
+            className="ml-auto hidden items-center gap-2 rounded-xl border border-line bg-surface px-3 py-1.5 text-sm text-muted shadow-soft transition-colors hover:text-ink sm:flex"
+          >
+            <Search className="size-4" /> Search
+            <kbd className="ml-4 rounded-md border border-line px-1.5 text-[10px]">⌘K</kbd>
+          </button>
+          <button onClick={() => setPalette(true)} className="ml-auto rounded-lg p-1.5 text-muted hover:bg-subtle sm:hidden" aria-label="Search">
+            <Search className="size-5" />
+          </button>
+          <div className="sm:ml-3">
             <EnvSwitch env={env} hrefFor={switchTo} />
           </div>
         </div>
@@ -160,6 +174,9 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
           )}
         </AnimatePresence>
       </header>
+
+      <CommandPalette orgId={orgId} env={env} open={palette} onOpenChange={setPalette} />
+      <WelcomeTour storageKey={`tn_tour_done:${user.id}`} />
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8 sm:py-10">
         <motion.div key={pathname} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: 'easeOut' }}>
