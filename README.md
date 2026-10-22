@@ -44,9 +44,12 @@ Every customer, message, key and webhook setting belongs to one environment.
 | Method | Path | |
 |---|---|---|
 | POST | `/v1/customers/link` | One-time `t.me` connect link for `externalId` |
-| PUT / GET | `/v1/customers/:externalId` | Upsert (phone) / status incl. `reachable` |
-| POST | `/v1/messages` | Send. Returns `QUEUED`, or `UNDELIVERABLE` + `reason` right away |
+| PUT / GET | `/v1/customers/:externalId` | Upsert (phone, `locale`) / status incl. `reachable` |
+| POST | `/v1/messages` | Send `text`, or a `template` + `params` (+ optional `locale`). Returns `QUEUED`, or `UNDELIVERABLE` + `reason` right away |
+| GET | `/v1/templates` | Templates with their languages and placeholders |
 | GET | `/v1/messages`, `/v1/messages/:id` | History (cursor pagination) / status |
+
+Templates are managed in the portal (per organization, shared by sandbox and live) with `en`, `am`, `om` and `ti` variants and `{{placeholder}}` values. The language is the `locale` sent, else the customer's locale, else the template default; missing params return 400.
 
 Message results:
 
@@ -126,5 +129,5 @@ docker compose --env-file .env.production up -d --build
 - A delivery log of webhook events in the portal.
 - Per-bot send rate limits (one global 25/s limit today).
 - A retry can send a message twice if the database update fails right after Telegram accepts it.
-- Media and documents, templates and broadcasts.
+- Media and documents, and broadcasts.
 - A landing page and visual polish of the portal.

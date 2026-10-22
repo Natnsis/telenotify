@@ -45,6 +45,23 @@ const customer = await telenotify.customers.get('customer_123');
 customer.reachable; // false → use your fallback channel
 ```
 
+## Templates (English, Amharic, Afaan Oromo, Tigrinya)
+
+Create templates in the portal, then send them by key:
+
+```ts
+await telenotify.customers.upsert('customer_123', { locale: 'am' });
+
+await telenotify.messages.send({
+  to: 'customer_123',
+  template: 'payment_received',
+  params: { amount: '1,250', payer: 'Abebe', ref: 'TX-88' },
+  priority: 'high',
+}); // sent in Amharic; pass `locale` to override
+
+const templates = await telenotify.templates.list(); // keys, languages, placeholders
+```
+
 ## Verify a phone number without SMS
 
 ```ts
