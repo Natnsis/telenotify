@@ -20,7 +20,8 @@ export type AuditAction =
   | 'customer.unlinked'
   | 'template.created'
   | 'template.updated'
-  | 'template.deleted';
+  | 'template.deleted'
+  | 'sms_fallback.updated';
 
 export type Actor = Pick<User, 'id' | 'email'> | null;
 

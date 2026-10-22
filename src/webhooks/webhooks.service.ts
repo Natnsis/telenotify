@@ -15,6 +15,8 @@ export type EnvironmentEvent =
   | 'message.undeliverable'
   | 'message.failed'
   | 'message.received'
+  | 'message.fallback_sent'
+  | 'message.fallback_failed'
   | 'customer.linked'
   | 'customer.blocked'
   | 'verification.completed'
