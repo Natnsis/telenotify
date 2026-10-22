@@ -3,6 +3,7 @@
 import { KeyRound, Plus, ShieldAlert } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import useSWR from 'swr';
+import { RequestLog } from '@/components/request-log';
 import { Alert, Badge, Button, Card, Dialog, Empty, formatDate, Input, PageHeader, Secret, Skeleton, Table, timeAgo } from '@/components/ui';
 import { api, ApiError, fetcher } from '@/lib/api';
 import { envPath, useOrgParams } from '@/lib/hooks';
@@ -90,6 +91,10 @@ export default function KeysPage() {
           </Table>
         )}
       </Card>
+
+      <div className="mt-6">
+        <RequestLog basePath={envPath(orgId, env)} keys={keys ?? []} />
+      </div>
 
       <Dialog open={creating} onClose={() => setCreating(false)} title="Create an API key" description="Give it a name you'll recognize later, like the server that uses it.">
         <form onSubmit={create} className="space-y-4">
