@@ -5,6 +5,7 @@ import {
   Bot,
   Braces,
   Check,
+  ChevronRight,
   ChevronsUpDown,
   CreditCard,
   FileText,
@@ -89,7 +90,13 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
   const base = `/o/${orgId}/${env}`;
   const subpath = pathname.slice(base.length);
 
-  useEffect(() => setDrawer(false), [pathname]);
+  const scroller = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setDrawer(false);
+    // On large screens the page scrolls inside the panel, which Next doesn't reset.
+    scroller.current?.scrollTo({ top: 0 });
+  }, [pathname]);
 
   if (orgError) {
     return (
@@ -124,9 +131,13 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
     />
   );
 
+  const current = currentPage(subpath);
+
   return (
-    <div className="min-h-screen lg:pl-64">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-line bg-surface/80 backdrop-blur-xl lg:block">{nav}</aside>
+    // lg+: the sidebar sits on the darker "shell" color and the page is an inset,
+    // rounded panel that scrolls on its own. Smaller screens use a normal page.
+    <div className="min-h-screen bg-page lg:h-screen lg:overflow-hidden lg:bg-shell lg:pl-64">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">{nav}</aside>
 
       <AnimatePresence>
         {drawer && (
@@ -137,7 +148,7 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'spring', stiffness: 380, damping: 36 }}
-              className="absolute inset-y-0 left-0 w-72 border-r border-line bg-surface"
+              className="absolute inset-y-0 left-0 w-72 border-r border-line bg-shell"
             >
               <button onClick={() => setDrawer(false)} className="absolute right-3 top-4 z-10 rounded-lg p-1.5 text-muted hover:bg-subtle" aria-label="Close menu">
                 <X className="size-4" />
@@ -148,68 +159,92 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
         )}
       </AnimatePresence>
 
-      <header className="sticky top-0 z-20 border-b border-line bg-page/80 backdrop-blur-xl">
-        <div className="flex h-14 items-center gap-3 px-4 sm:px-8">
-          <button onClick={() => setDrawer(true)} className="-ml-1 rounded-lg p-1.5 text-ink hover:bg-subtle lg:hidden" aria-label="Open menu">
-            <Menu className="size-5" />
-          </button>
-          <span className="truncate text-sm font-medium text-ink lg:hidden">{org.name}</span>
-          <button
-            onClick={() => setPalette(true)}
-            className="ml-auto hidden items-center gap-2 rounded-xl border border-line bg-surface px-3 py-1.5 text-sm text-muted shadow-soft transition-colors hover:text-ink sm:flex"
-          >
-            <Search className="size-4" /> Search
-            <kbd className="ml-4 rounded-md border border-line px-1.5 text-[10px]">⌘K</kbd>
-          </button>
-          <button onClick={() => setPalette(true)} className="ml-auto rounded-lg p-1.5 text-muted hover:bg-subtle sm:hidden" aria-label="Search">
-            <Search className="size-5" />
-          </button>
-          <ThemeToggle className="ml-2 hidden sm:inline-flex" />
-          <div className="sm:ml-1">
-            <EnvSwitch env={env} hrefFor={switchTo} />
-          </div>
-        </div>
-        <AnimatePresence initial={false}>
-          {env === 'sandbox' && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-t border-amber-300/50 bg-gradient-to-r from-amber-50 via-amber-100/70 to-amber-50 text-center text-xs font-medium text-amber-900 dark:border-amber-500/20 dark:from-amber-500/5 dark:via-amber-500/10 dark:to-amber-500/5 dark:text-amber-200"
-            >
-              <p className="px-4 py-1.5">Sandbox mode: test data only. Messages go through the shared Telenotify sandbox bot.</p>
+      <div className="lg:h-full lg:py-2 lg:pr-2">
+        <div
+          ref={scroller}
+          className="relative lg:h-full lg:overflow-y-auto lg:rounded-2xl lg:border lg:border-line lg:bg-page lg:shadow-soft"
+        >
+          {/* Sandbox gets a thin amber edge instead of a full-width banner. */}
+          {env === 'sandbox' && <div className="sticky top-0 z-30 h-0.5 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500" />}
+          <header className="sticky top-0 z-20 border-b border-line/70 bg-page/75 backdrop-blur-xl">
+            <div className="flex h-14 items-center gap-3 px-4 sm:px-8">
+              <button onClick={() => setDrawer(true)} className="-ml-1 rounded-lg p-1.5 text-ink hover:bg-subtle lg:hidden" aria-label="Open menu">
+                <Menu className="size-5" />
+              </button>
+              <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-sm">
+                <span className="hidden truncate text-muted sm:inline">{org.name}</span>
+                <ChevronRight className="hidden size-3.5 shrink-0 text-muted/60 sm:block" />
+                <span className="truncate font-medium text-ink">{current.label}</span>
+                {current.detail && (
+                  <>
+                    <ChevronRight className="size-3.5 shrink-0 text-muted/60" />
+                    <span className="truncate text-muted">Details</span>
+                  </>
+                )}
+              </nav>
+              {env === 'sandbox' && (
+                <span
+                  title="Sandbox: test data only. Messages go through the shared Telenotify sandbox bot."
+                  className="hidden shrink-0 items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-400/30 md:inline-flex dark:text-amber-300"
+                >
+                  <FlaskConical className="size-3" /> Test data
+                </span>
+              )}
+              <button
+                onClick={() => setPalette(true)}
+                className="ml-auto hidden w-56 items-center gap-2 rounded-xl border border-line bg-surface/80 px-3 py-1.5 text-sm text-muted transition-colors hover:border-muted/40 hover:text-ink md:flex"
+              >
+                <Search className="size-4" /> Search…
+                <kbd className="ml-auto rounded-md border border-line bg-subtle px-1.5 font-sans text-[10px] font-medium">⌘K</kbd>
+              </button>
+              <button onClick={() => setPalette(true)} className="ml-auto rounded-lg p-1.5 text-muted hover:bg-subtle md:hidden" aria-label="Search">
+                <Search className="size-5" />
+              </button>
+              <div className="hidden sm:block">
+                <ThemeToggle />
+              </div>
+              <EnvSwitch env={env} hrefFor={switchTo} />
+            </div>
+          </header>
+
+          <CommandPalette orgId={orgId} env={env} open={palette} onOpenChange={setPalette} />
+          <WelcomeTour storageKey={`tn_tour_done:${user.id}`} />
+
+          <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
+            <motion.div key={pathname} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: 'easeOut' }}>
+              {children}
             </motion.div>
-          )}
-        </AnimatePresence>
-      </header>
-
-      <CommandPalette orgId={orgId} env={env} open={palette} onOpenChange={setPalette} />
-      <WelcomeTour storageKey={`tn_tour_done:${user.id}`} />
-
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8 sm:py-10">
-        <motion.div key={pathname} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: 'easeOut' }}>
-          {children}
-        </motion.div>
-      </main>
+          </main>
+        </div>
+      </div>
     </div>
   );
+}
+
+// The sidebar entry for the current path, for the breadcrumb.
+function currentPage(subpath: string): { label: string; detail: boolean } {
+  const items = groups.flatMap((g) => g.items);
+  if (subpath === '' || subpath === '/') return { label: 'Get started', detail: false };
+  const match = items.filter((i) => i.href && subpath.startsWith(i.href)).sort((a, b) => b.href.length - a.href.length)[0];
+  if (!match) return { label: 'Dashboard', detail: false };
+  return { label: match.label, detail: subpath.length > match.href.length + 1 };
 }
 
 function Sidebar({ base, env, subpath, orgSwitcher, footer }: { base: string; env: EnvName; subpath: string; orgSwitcher: ReactNode; footer: ReactNode }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="px-4 pb-3 pt-4">
+      <div className="flex h-14 items-center px-5">
         <Link href={base} className="inline-block">
           <Logo suffix="Developers" />
         </Link>
       </div>
-      <div className="px-3">{orgSwitcher}</div>
-      <nav className="mt-4 flex-1 space-y-6 overflow-y-auto px-3 pb-4">
+      <div className="px-3 pt-1">{orgSwitcher}</div>
+      <nav className="mt-5 flex-1 space-y-5 overflow-y-auto px-3 pb-4">
         {groups.map((group) => {
           const items = group.items.filter((i) => !(i.sandboxOnly && env === 'live'));
           return (
             <div key={group.label}>
-              <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted/80">{group.label}</p>
+              <p className="px-3 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted/70">{group.label}</p>
               <ul className="space-y-0.5">
                 {items.map((item) => {
                   const active = item.href === '' ? subpath === '' : subpath.startsWith(item.href);
@@ -217,10 +252,19 @@ function Sidebar({ base, env, subpath, orgSwitcher, footer }: { base: string; en
                     <li key={item.href}>
                       <Link
                         href={`${base}${item.href}`}
-                        className={cn('relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors', active ? 'font-medium text-ink' : 'text-muted hover:bg-subtle/70 hover:text-ink')}
+                        className={cn(
+                          'group relative flex items-center gap-3 rounded-lg px-3 py-[7px] text-[13.5px] transition-colors',
+                          active ? 'font-medium text-ink' : 'text-muted hover:bg-surface/60 hover:text-ink',
+                        )}
                       >
-                        {active && <motion.span layoutId="nav-active" className="absolute inset-0 rounded-xl bg-subtle ring-1 ring-line" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
-                        <item.icon className={cn('relative size-4', active && 'text-brand')} />
+                        {active && (
+                          <motion.span
+                            layoutId="nav-active"
+                            className="absolute inset-0 rounded-lg bg-surface shadow-soft ring-1 ring-line"
+                            transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                          />
+                        )}
+                        <item.icon className={cn('relative size-4 transition-colors', active ? 'text-brand' : 'text-muted/80 group-hover:text-ink')} />
                         <span className="relative">{item.label}</span>
                       </Link>
                     </li>
@@ -231,16 +275,16 @@ function Sidebar({ base, env, subpath, orgSwitcher, footer }: { base: string; en
           );
         })}
       </nav>
-      <div className="border-t border-line p-3">{footer}</div>
+      <div className="p-3">{footer}</div>
     </div>
   );
 }
 
 function EnvSwitch({ env, hrefFor }: { env: EnvName; hrefFor: (env: EnvName) => string }) {
   return (
-    <div className="relative flex rounded-xl border border-line bg-subtle p-1 text-sm">
+    <div className="relative flex shrink-0 rounded-xl border border-line bg-subtle p-0.5 text-[13px]">
       {(['sandbox', 'live'] as const).map((target) => (
-        <Link key={target} href={hrefFor(target)} className="relative px-3.5 py-1 font-medium capitalize">
+        <Link key={target} href={hrefFor(target)} className="relative px-3 py-1 font-medium capitalize">
           {env === target && (
             <motion.span
               layoutId="env-pill"
@@ -278,7 +322,7 @@ function OrgSwitcher({ currentId, currentName }: { currentId: string; currentNam
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-2.5 rounded-xl border border-line bg-surface px-2.5 py-2 text-left shadow-soft transition-colors hover:bg-subtle"
+        className="flex w-full items-center gap-2.5 rounded-xl border border-line bg-surface px-2.5 py-2 text-left shadow-soft transition-colors hover:border-muted/30"
       >
         <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 text-xs font-bold text-white dark:from-slate-600 dark:to-slate-800">
           {currentName.charAt(0).toUpperCase()}
@@ -352,7 +396,7 @@ function UserMenu({ name, email }: { name: string; email: string }) {
           </motion.div>
         )}
       </AnimatePresence>
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-subtle" aria-label="Account menu">
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-surface/70" aria-label="Account menu">
         <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand to-accent text-sm font-semibold text-white">{name.charAt(0).toUpperCase()}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium text-ink">{name}</span>
