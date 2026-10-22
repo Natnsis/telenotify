@@ -239,7 +239,7 @@ export function TextLink({ href, children }: { href: string; children: ReactNode
   );
 }
 
-export function Dialog({ open, onClose, title, description, children }: { open: boolean; onClose: () => void; title: string; description?: ReactNode; children: ReactNode }) {
+export function Dialog({ open, onClose, title, description, children, wide }: { open: boolean; onClose: () => void; title: string; description?: ReactNode; children: ReactNode; wide?: boolean }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -258,7 +258,7 @@ export function Dialog({ open, onClose, title, description, children }: { open: 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-            className="relative w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-lift"
+            className={cn('relative w-full rounded-2xl border border-line bg-surface p-6 shadow-lift', wide ? 'max-w-2xl' : 'max-w-md')}
           >
             <button onClick={onClose} className="absolute right-4 top-4 rounded-lg p-1 text-muted hover:bg-subtle hover:text-ink" aria-label="Close">
               <X className="size-4" />
