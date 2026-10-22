@@ -103,6 +103,13 @@ docker compose --env-file .env.production up -d --build
 - **Google:** add `https://<PORTAL_DOMAIN>/api/auth/google/callback` as a redirect URI, and publish the consent screen.
 - **Back up** the `pgdata` volume and `ENCRYPTION_KEY`.
 
+## Account, team and compliance
+
+- **Audit log:** key, bot, webhook, secret, team and plan changes are recorded per organization (Audit log page).
+- **Usage alerts:** owners get an email at 80% and 100% of the monthly live quota, once per month.
+- **Account and organization settings:** change name and password, delete the account; rename, leave or delete an organization. The last owner can't leave or delete their account while others remain.
+- **Legal pages:** `/terms`, `/privacy` and `/refunds`, using `NEXT_PUBLIC_LEGAL_ENTITY` and `NEXT_PUBLIC_CONTACT_EMAIL`. They are a starting template: have a lawyer review them, and confirm the refund terms (7-day window, 10% usage, 72-hour outage) before launch.
+
 ## Not done yet
 
 - Inviting teammates and roles (the data model has OWNER/MEMBER; there is no UI or permission checks yet).
