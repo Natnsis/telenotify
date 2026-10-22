@@ -55,6 +55,7 @@ export interface Message {
   text: string;
   error: string | null;
   attempts: number;
+  fallback?: MessageFallback | null;
   sentAt: string | null;
   createdAt: string;
 }
@@ -175,4 +176,22 @@ export interface MessageTemplate {
   placeholders: string[];
   updatedAt: string;
   createdAt: string;
+}
+
+export interface SmsFallbackSettings {
+  enabled: boolean;
+  provider: 'afromessage';
+  /** Sandbox: nothing is sent, results are simulated. */
+  simulated: boolean;
+  configured: boolean;
+  tokenHint: string | null;
+  identifierId: string | null;
+  senderName: string | null;
+}
+
+export interface MessageFallback {
+  channel: 'sms';
+  status: 'queued' | 'sent' | 'failed' | 'skipped';
+  error: string | null;
+  at: string | null;
 }
