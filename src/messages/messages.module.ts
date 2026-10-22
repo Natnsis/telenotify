@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { CustomersModule } from '../customers/customers.module';
 import { TelegramModule } from '../telegram/telegram.module';
+import { BotRateLimiter } from './bot-rate-limiter.service';
 import { DeliveryService } from './delivery.service';
 import { MESSAGES_QUEUE } from './messages.constants';
 import { MessagesController } from './messages.controller';
@@ -23,7 +24,7 @@ import { MessagesService } from './messages.service';
     }),
   ],
   controllers: [MessagesController],
-  providers: [MessagesService, DeliveryService, MessagesProcessor],
+  providers: [MessagesService, DeliveryService, MessagesProcessor, BotRateLimiter],
   exports: [MessagesService],
 })
 export class MessagesModule {}
