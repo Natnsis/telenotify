@@ -7,12 +7,12 @@ Agreed order (2026-10-22). Tick items as they ship; keep this file current.
 - [x] Resend a webhook event from the portal
 - [x] Message detail view: timeline, reason, request, related webhook events, "copy as curl"
 
-## Batch 2: Required before taking money
-- [ ] Account settings: change name and password, linked Google account, delete account
-- [ ] Organization settings: rename, leave, delete organization
-- [ ] Terms of Service, Privacy Policy and Refund Policy pages
-- [ ] Usage alert emails at 80% and 100% of the plan quota
-- [ ] Audit log: keys created/revoked, bot connected, invites, plan changes
+## Batch 2: Required before taking money ✅ (done 2026-10-22)
+- [x] Account settings: change name and password, linked Google account, delete account
+- [x] Organization settings: rename, leave, delete organization
+- [x] Terms of Service, Privacy Policy and Refund Policy pages
+- [x] Usage alert emails at 80% and 100% of the plan quota
+- [x] Audit log: keys created/revoked, bot connected, invites, plan changes
 
 ## Batch 3: Make the value visible
 - [ ] Analytics on Get started: messages per day, delivery rate, % reachable on Telegram, SMS money saved
