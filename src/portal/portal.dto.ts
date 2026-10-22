@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
 import { InlineButton } from '../telegram/telegram-api.client';
 
 export class CreateOrgDto {
@@ -27,6 +27,35 @@ export class ConnectBotDto {
   @IsString()
   @IsNotEmpty()
   botToken!: string;
+}
+
+export class UpdateSmsFallbackDto {
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
+
+  // null removes the saved credentials and turns fallback off.
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  token?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  identifierId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(11)
+  senderName?: string | null;
+}
+
+export class TestSmsDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(20)
+  phone!: string;
 }
 
 export class PlaygroundLinkDto {

@@ -28,4 +28,6 @@ export const AUTH_LIMITS = {
   resendVerification: { ip: { limit: 3, ttl: 10 * MINUTE } },
   tokenRedeem: { ip: { limit: 10, ttl: 15 * MINUTE } },
   google: { ip: { limit: 20, ttl: MINUTE } },
+  // Each test sends a real SMS on the organization's AfroMessage balance.
+  testSms: { ip: { limit: 5, ttl: 10 * MINUTE } },
 };

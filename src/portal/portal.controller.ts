@@ -1,3 +1,5 @@
+import { Throttle } from '@nestjs/throttler';
+import { AUTH_LIMITS } from '../common/throttling';
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, ParseBoolPipe, ParseEnumPipe, ParseIntPipe, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { DeliveryStatus, MessageStatus, Organization, User } from '@prisma/client';
@@ -12,8 +14,9 @@ import { BillingService } from '../billing/billing.service';
 import { MessagesService } from '../messages/messages.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { VerificationsService } from '../verifications/verifications.service';
-import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, CustomerMessageDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, UpdateEnvironmentDto } from './portal.dto';
+import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, CustomerMessageDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, TestSmsDto, UpdateEnvironmentDto, UpdateSmsFallbackDto } from './portal.dto';
 import { PortalService } from './portal.service';
+import { SmsFallbackService } from '../sms-fallback/sms-fallback.service';
 
 @ApiExcludeController()
 @UseGuards(SessionGuard, OrgAccessGuard)
@@ -28,6 +31,7 @@ export class PortalController {
     private readonly webhooks: WebhooksService,
     private readonly audit: AuditService,
     private readonly requestLog: RequestLogService,
+    private readonly smsFallback: SmsFallbackService,
   ) {}
 
   @Post()
@@ -85,6 +89,23 @@ export class PortalController {
   @Delete(':orgId/envs/:env/bot')
   disconnectBot(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User) {
     return this.portal.disconnectBot(environment, user);
+  }
+
+  @Get(':orgId/envs/:env/sms-fallback')
+  smsFallbackSettings(@CurrentEnvironment() environment: EnvironmentWithOrg) {
+    return this.smsFallback.view(environment);
+  }
+
+  @Put(':orgId/envs/:env/sms-fallback')
+  updateSmsFallback(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User, @Body() dto: UpdateSmsFallbackDto) {
+    return this.smsFallback.update(environment, dto, user);
+  }
+
+  @Post(':orgId/envs/:env/sms-fallback/test')
+  @HttpCode(200)
+  @Throttle(AUTH_LIMITS.testSms)
+  testSmsFallback(@CurrentEnvironment() environment: EnvironmentWithOrg, @Body() dto: TestSmsDto) {
+    return this.smsFallback.sendTest(environment, dto.phone);
   }
 
   @Get(':orgId/envs/:env/requests')
