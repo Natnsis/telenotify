@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, ParseBoolPipe, ParseEnumPipe, ParseIntPipe, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
-import { MessageStatus, Organization, User } from '@prisma/client';
+import { DeliveryStatus, MessageStatus, Organization, User } from '@prisma/client';
 import type { Request } from 'express';
 import { OrgAccessGuard } from '../common/org-access.guard';
 import { CurrentEnvironment, CurrentUser, EnvironmentWithOrg } from '../common/request-context';
@@ -8,6 +8,7 @@ import { SessionGuard } from '../common/session.guard';
 import { CustomersService } from '../customers/customers.service';
 import { BillingService } from '../billing/billing.service';
 import { MessagesService } from '../messages/messages.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { VerificationsService } from '../verifications/verifications.service';
 import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, UpdateEnvironmentDto } from './portal.dto';
 import { PortalService } from './portal.service';
@@ -22,6 +23,7 @@ export class PortalController {
     private readonly messages: MessagesService,
     private readonly verifications: VerificationsService,
     private readonly billing: BillingService,
+    private readonly webhooks: WebhooksService,
   ) {}
 
   @Post()
@@ -101,6 +103,33 @@ export class PortalController {
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.messages.list(environment, { customer: customer || undefined, status, cursor, limit });
+  }
+
+  @Get(':orgId/envs/:env/messages/:messageId')
+  messageDetail(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('messageId') messageId: string) {
+    return this.portal.messageDetail(environment, messageId);
+  }
+
+  @Get(':orgId/envs/:env/webhooks/deliveries')
+  listDeliveries(
+    @CurrentEnvironment() environment: EnvironmentWithOrg,
+    @Query('status', new ParseEnumPipe(DeliveryStatus, { optional: true })) status?: DeliveryStatus,
+    @Query('event') event?: string,
+    @Query('cursor') cursor?: string,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+  ) {
+    return this.webhooks.list(environment, { status, event: event || undefined, cursor, limit });
+  }
+
+  @Get(':orgId/envs/:env/webhooks/deliveries/:deliveryId')
+  delivery(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('deliveryId') deliveryId: string) {
+    return this.webhooks.get(environment, deliveryId);
+  }
+
+  @Post(':orgId/envs/:env/webhooks/deliveries/:deliveryId/resend')
+  @HttpCode(200)
+  async resendDelivery(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('deliveryId') deliveryId: string) {
+    return this.webhooks.toView(await this.webhooks.resend(environment, deliveryId));
   }
 
   @Get(':orgId/envs/:env/customers')

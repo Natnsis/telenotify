@@ -4,6 +4,7 @@ import { Environment, EnvironmentType, Organization, User } from '@prisma/client
 import { encrypt, randomToken, sha256 } from '../common/crypto';
 import { assertPublicUrl, BlockedAddressError } from '../common/network-guard';
 import { TEST_CUSTOMERS } from '../common/sandbox';
+import { toMessageView } from '../messages/messages.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramApiError } from '../telegram/telegram-api.client';
 import { TelegramService } from '../telegram/telegram.service';
@@ -113,7 +114,38 @@ export class PortalService {
   // Delivered immediately (no retries) so the portal can show the result.
   sendTestEvent(environment: Environment) {
     if (!environment.eventWebhookUrl) throw new BadRequestException('Set a webhook URL first');
-    return this.webhooks.deliver(environment, this.webhooks.buildPayload(environment, 'webhook.test', { message: 'Hello from Telenotify 👋' }));
+    return this.webhooks.sendTest(environment);
+  }
+
+  // ---------- Message detail ----------
+
+  // Everything a developer needs to debug one message: its lifecycle, the request
+  // that created it, and the webhook events it produced.
+  async messageDetail(environment: Environment, messageId: string) {
+    const message = await this.prisma.message.findFirst({ where: { id: messageId, environmentId: environment.id }, include: { customer: true } });
+    if (!message) throw new NotFoundException('Message not found');
+    const deliveries = await this.prisma.webhookDelivery.findMany({ where: { messageId: message.id }, orderBy: { createdAt: 'asc' } });
+    const view = toMessageView(message);
+    return {
+      ...view,
+      telegramMessageId: message.telegramMessageId,
+      customer: {
+        externalId: message.customer.externalId,
+        telegramLinked: Boolean(message.customer.telegramChatId),
+        blocked: Boolean(message.customer.blockedAt),
+        telegramUsername: message.customer.telegramUsername,
+      },
+      request:
+        message.direction === 'OUTBOUND'
+          ? {
+              to: message.customer.externalId,
+              text: message.text,
+              ...(message.buttons ? { buttons: message.buttons } : {}),
+              ...(message.idempotencyKey ? { idempotencyKey: message.idempotencyKey } : {}),
+            }
+          : null,
+      events: deliveries.map((d) => this.webhooks.toView(d)),
+    };
   }
 
   // ---------- Live bot ----------
