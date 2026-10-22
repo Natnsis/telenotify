@@ -174,6 +174,43 @@ export class PortalService {
     };
   }
 
+  // ---------- Customer detail ----------
+
+  async customerDetail(environment: Environment, externalId: string) {
+    const customer = await this.prisma.customer.findUnique({ where: { environmentId_externalId: { environmentId: environment.id, externalId } } });
+    if (!customer) throw new NotFoundException('Customer not found');
+    const [messages, verifications, counts] = await Promise.all([
+      this.prisma.message.findMany({ where: { customerId: customer.id }, include: { customer: true }, orderBy: { createdAt: 'desc' }, take: 25 }),
+      this.prisma.verification.findMany({ where: { environmentId: environment.id, externalId }, orderBy: { createdAt: 'desc' }, take: 10 }),
+      this.prisma.message.groupBy({ by: ['status'], where: { customerId: customer.id }, _count: true }),
+    ]);
+    return {
+      customer: {
+        externalId: customer.externalId,
+        phone: customer.phone,
+        reachable: Boolean(customer.telegramChatId) && !customer.blockedAt,
+        telegramLinked: Boolean(customer.telegramChatId),
+        telegramUsername: customer.telegramUsername,
+        linkedAt: customer.linkedAt,
+        blocked: Boolean(customer.blockedAt),
+        blockedAt: customer.blockedAt,
+        testCustomer: Object.keys(TEST_CUSTOMERS).includes(customer.externalId),
+        createdAt: customer.createdAt,
+      },
+      stats: Object.fromEntries(counts.map((c) => [c.status, c._count])),
+      messages: messages.map(toMessageView),
+      verifications: verifications.map((v) => ({ id: v.id, status: v.status, reason: v.reason, phone: v.phone, verifiedAt: v.verifiedAt, createdAt: v.createdAt })),
+    };
+  }
+
+  // Disconnects the customer's Telegram chat; they need a new link to reconnect.
+  async unlinkCustomer(environment: Environment, externalId: string, actor: User) {
+    const customer = await this.prisma.customer.findUnique({ where: { environmentId_externalId: { environmentId: environment.id, externalId } } });
+    if (!customer) throw new NotFoundException('Customer not found');
+    await this.prisma.customer.update({ where: { id: customer.id }, data: { telegramChatId: null, telegramUsername: null, linkedAt: null, blockedAt: null } });
+    await this.audit.record(environment.orgId, actor, 'customer.unlinked', externalId, { environment: environment.type.toLowerCase() });
+  }
+
   // ---------- Message detail ----------
 
   // Everything a developer needs to debug one message: its lifecycle, the request

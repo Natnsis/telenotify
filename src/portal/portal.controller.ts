@@ -11,7 +11,7 @@ import { BillingService } from '../billing/billing.service';
 import { MessagesService } from '../messages/messages.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { VerificationsService } from '../verifications/verifications.service';
-import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, UpdateEnvironmentDto } from './portal.dto';
+import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, CustomerMessageDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, UpdateEnvironmentDto } from './portal.dto';
 import { PortalService } from './portal.service';
 
 @ApiExcludeController()
@@ -153,6 +153,28 @@ export class PortalController {
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.customers.list(environment, { search: search || undefined, linked, cursor, limit });
+  }
+
+  @Get(':orgId/envs/:env/customers/:externalId')
+  customerDetail(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('externalId') externalId: string) {
+    return this.portal.customerDetail(environment, externalId);
+  }
+
+  // Connect link (with QR in the portal) for any customer, in either environment.
+  @Post(':orgId/envs/:env/customers/:externalId/link')
+  customerLink(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('externalId') externalId: string) {
+    return this.customers.createLink(environment, externalId);
+  }
+
+  @Post(':orgId/envs/:env/customers/:externalId/messages')
+  customerMessage(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('externalId') externalId: string, @Body() dto: CustomerMessageDto) {
+    return this.messages.send(environment, { to: externalId, text: dto.text });
+  }
+
+  @Post(':orgId/envs/:env/customers/:externalId/unlink')
+  @HttpCode(204)
+  unlinkCustomer(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User, @Param('externalId') externalId: string) {
+    return this.portal.unlinkCustomer(environment, externalId, user);
   }
 
   // Sandbox playground: lets a signed-in developer try the flow without an API key.

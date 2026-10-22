@@ -61,3 +61,10 @@ export class PlaygroundVerifyDto {
   @Matches(/^(\+?[0-9 ()-]{9,20})?$/)
   phone?: string;
 }
+
+export class CustomerMessageDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(4096)
+  text!: string;
+}
