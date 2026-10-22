@@ -1,15 +1,19 @@
 import Link from 'next/link';
 import { AuthShowcase } from '@/components/auth-showcase';
 import { Logo } from '@/components/logo';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[1fr_1.05fr]">
       <div className="relative flex flex-col px-5 py-8 sm:px-10">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand/10 to-transparent lg:hidden" />
-        <Link href="/" className="relative w-fit">
-          <Logo />
-        </Link>
+        <div className="relative flex items-center justify-between">
+          <Link href="/" className="w-fit">
+            <Logo />
+          </Link>
+          <ThemeToggle />
+        </div>
         <div className="relative flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm">{children}</div>
         </div>

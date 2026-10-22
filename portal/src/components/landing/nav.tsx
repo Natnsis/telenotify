@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import useSWR from 'swr';
 import { Logo } from '@/components/logo';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { cn } from '@/components/ui';
 import { fetcher } from '@/lib/api';
 import type { Me } from '@/lib/types';
@@ -44,6 +45,7 @@ export function LandingNav() {
           ))}
         </div>
         <div className="ml-auto hidden items-center gap-2 md:flex">
+          <ThemeToggle className="mr-1" />
           {me ? (
             <PrimaryLink href="/dashboard">Open dashboard</PrimaryLink>
           ) : (
@@ -73,6 +75,9 @@ export function LandingNav() {
                   {link.label}
                 </a>
               ))}
+              <div className="flex items-center justify-between px-3 py-2 text-sm text-muted">
+                Theme <ThemeToggle withLabels />
+              </div>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <Link href={me ? '/dashboard' : '/login'} className="rounded-full border border-line px-4 py-2 text-center text-sm font-medium text-ink">
                   {me ? 'Dashboard' : 'Sign in'}

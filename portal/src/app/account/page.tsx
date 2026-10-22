@@ -1,10 +1,11 @@
 'use client';
 
-import { ArrowLeft, KeyRound, ShieldAlert, UserRound } from 'lucide-react';
+import { ArrowLeft, KeyRound, Palette, ShieldAlert, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 import { Logo } from '@/components/logo';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Alert, Badge, Button, Card, Dialog, Input, PageHeader, Spinner } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useRequireUser } from '@/lib/hooks';
@@ -115,6 +116,10 @@ export default function AccountPage() {
               {user.hasPassword ? 'Change password' : 'Set password'}
             </Button>
           </form>
+        </Card>
+
+        <Card icon={Palette} title="Appearance" description="Choose light or dark, or follow your device. Saved in this browser.">
+          <ThemeToggle withLabels />
         </Card>
 
         <Card icon={ShieldAlert} title="Delete account" description="Permanently delete your account. Organizations where you're the only member are deleted too.">

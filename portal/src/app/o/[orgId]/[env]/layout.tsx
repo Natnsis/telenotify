@@ -30,6 +30,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import { CommandPalette } from '@/components/command-palette';
 import { Logo } from '@/components/logo';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { WelcomeTour } from '@/components/welcome-tour';
 import { cn, Spinner } from '@/components/ui';
 import { api, fetcher } from '@/lib/api';
@@ -159,7 +160,8 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
           <button onClick={() => setPalette(true)} className="ml-auto rounded-lg p-1.5 text-muted hover:bg-subtle sm:hidden" aria-label="Search">
             <Search className="size-5" />
           </button>
-          <div className="sm:ml-3">
+          <ThemeToggle className="ml-2 hidden sm:inline-flex" />
+          <div className="sm:ml-1">
             <EnvSwitch env={env} hrefFor={switchTo} />
           </div>
         </div>

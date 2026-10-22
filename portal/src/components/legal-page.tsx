@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 import { Logo } from './logo';
+import { ThemeToggle } from './theme-toggle';
 
 // Company details come from env so the same pages work for any deployment.
 export const LEGAL = {
@@ -17,10 +18,11 @@ export function LegalPage({ title, intro, children }: { title: string; intro: st
           <Link href="/">
             <Logo />
           </Link>
-          <nav className="flex gap-4 text-sm text-muted">
+          <nav className="flex items-center gap-4 text-sm text-muted">
             <Link href="/terms" className="hover:text-ink">Terms</Link>
             <Link href="/privacy" className="hover:text-ink">Privacy</Link>
             <Link href="/refunds" className="hover:text-ink">Refunds</Link>
+            <ThemeToggle />
           </nav>
         </div>
       </header>
