@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsArray, IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 import { InlineButton } from '../telegram/telegram-api.client';
 
 export class SendMessageDto {
@@ -52,4 +52,12 @@ export class SendMessageDto {
   @IsOptional()
   @IsIn(['normal', 'high'])
   priority?: 'normal' | 'high';
+
+  @ApiPropertyOptional({
+    description: 'Set false to skip SMS fallback for this message, e.g. when you send your own. Only applies when SMS fallback is on.',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  fallback?: boolean;
 }

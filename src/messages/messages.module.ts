@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { CustomersModule } from '../customers/customers.module';
 import { TelegramModule } from '../telegram/telegram.module';
+import { SmsFallbackModule } from '../sms-fallback/sms-fallback.module';
 import { TemplatesModule } from '../templates/templates.module';
 import { BotRateLimiter } from './bot-rate-limiter.service';
 import { DeliveryService } from './delivery.service';
@@ -15,6 +16,7 @@ import { MessagesService } from './messages.service';
     TelegramModule,
     CustomersModule,
     TemplatesModule,
+    SmsFallbackModule,
     BullModule.registerQueue({
       name: MESSAGES_QUEUE,
       defaultJobOptions: {

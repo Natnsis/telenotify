@@ -5,6 +5,7 @@ import { Customer, Environment, Message, MessageStatus, Prisma } from '@prisma/c
 import { Queue } from 'bullmq';
 import { BillingService } from '../billing/billing.service';
 import { CustomersService } from '../customers/customers.service';
+import { SmsFallbackService } from '../sms-fallback/sms-fallback.service';
 import { TemplatesService } from '../templates/templates.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
@@ -25,6 +26,7 @@ export class MessagesService {
     private readonly config: ConfigService,
     private readonly billing: BillingService,
     private readonly templates: TemplatesService,
+    private readonly smsFallback: SmsFallbackService,
     @InjectQueue(MESSAGES_QUEUE) private readonly queue: Queue<DeliverJob>,
   ) {}
 
@@ -67,6 +69,7 @@ export class MessagesService {
           buttons: buttons ? (buttons as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
           idempotencyKey: dto.idempotencyKey,
           priority: dto.priority === 'high' ? 'HIGH' : 'NORMAL',
+          smsFallback: dto.fallback !== false,
         },
         include: { customer: true },
       });
@@ -86,6 +89,7 @@ export class MessagesService {
         { jobId: message.id, priority: JOB_PRIORITY[message.priority] },
       );
     } else {
+      message = await this.smsFallback.trigger(environment, message);
       await this.webhooks.emit(environment, 'message.undeliverable', toMessageView(message));
     }
     return toMessageView(message);
@@ -165,6 +169,15 @@ export function toMessageView(message: Message & { customer: Customer }) {
     idempotencyKey: message.idempotencyKey,
     error: message.error,
     attempts: message.attempts,
+    // Set when SMS fallback is on and Telegram couldn't deliver.
+    fallback: message.fallbackStatus
+      ? {
+          channel: 'sms',
+          status: message.fallbackStatus.toLowerCase(),
+          error: message.fallbackError,
+          at: message.fallbackAt,
+        }
+      : null,
     sentAt: message.sentAt,
     createdAt: message.createdAt,
   };

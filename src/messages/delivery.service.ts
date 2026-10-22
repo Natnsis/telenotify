@@ -4,6 +4,7 @@ import { isTestCustomer, TEST_CUSTOMERS } from '../common/sandbox';
 import { PrismaService } from '../prisma/prisma.service';
 import { InlineButton, TelegramApiError } from '../telegram/telegram-api.client';
 import { TelegramService } from '../telegram/telegram.service';
+import { SmsFallbackService } from '../sms-fallback/sms-fallback.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { toMessageView } from './messages.service';
 
@@ -19,6 +20,7 @@ export class DeliveryService {
     private readonly prisma: PrismaService,
     private readonly telegram: TelegramService,
     private readonly webhooks: WebhooksService,
+    private readonly smsFallback: SmsFallbackService,
   ) {}
 
   async deliver(messageId: string, isFinalAttempt: boolean): Promise<void> {
@@ -100,7 +102,8 @@ export class DeliveryService {
       data: { status: 'UNDELIVERABLE', reason },
       include: { customer: true },
     });
-    await this.webhooks.emit(message.environment, 'message.undeliverable', toMessageView(updated));
+    const withFallback = await this.smsFallback.trigger(message.environment, updated);
+    await this.webhooks.emit(message.environment, 'message.undeliverable', toMessageView(withFallback));
   }
 
   private async markFailed(message: LoadedMessage, reason: string, error: string) {
@@ -109,6 +112,7 @@ export class DeliveryService {
       data: { status: 'FAILED', reason, error },
       include: { customer: true },
     });
-    await this.webhooks.emit(message.environment, 'message.failed', toMessageView(updated));
+    const withFallback = await this.smsFallback.trigger(message.environment, updated);
+    await this.webhooks.emit(message.environment, 'message.failed', toMessageView(withFallback));
   }
 }
