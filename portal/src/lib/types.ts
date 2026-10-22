@@ -162,3 +162,17 @@ export interface CustomerDetail {
   messages: Message[];
   verifications: { id: string; status: VerificationStatus; reason: string | null; phone: string | null; verifiedAt: string | null; createdAt: string }[];
 }
+
+export type Locale = 'en' | 'am' | 'om' | 'ti';
+
+export interface MessageTemplate {
+  id: string;
+  key: string;
+  name: string;
+  description: string | null;
+  variants: Partial<Record<Locale, string>>;
+  defaultLocale: Locale;
+  placeholders: string[];
+  updatedAt: string;
+  createdAt: string;
+}
