@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, Param, ParseEnumPipe, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseEnumPipe, ParseIntPipe, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { MessageStatus } from '@prisma/client';
 import { ApiKeyGuard } from '../common/api-key.guard';
+import { RequestLogInterceptor } from '../request-log/request-log.interceptor';
 import { CurrentEnvironment, EnvironmentWithOrg } from '../common/request-context';
 import { SendMessageDto } from './messages.dto';
 import { MessagesService } from './messages.service';
@@ -9,6 +10,7 @@ import { MessagesService } from './messages.service';
 @ApiTags('messages')
 @ApiSecurity('api-key')
 @UseGuards(ApiKeyGuard)
+@UseInterceptors(RequestLogInterceptor)
 @Controller('v1/messages')
 export class MessagesController {
   constructor(private readonly messages: MessagesService) {}

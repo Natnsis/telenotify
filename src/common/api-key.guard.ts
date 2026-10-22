@@ -21,6 +21,7 @@ export class ApiKeyGuard implements CanActivate {
       throw new UnauthorizedException('Invalid API key');
     }
     request.environment = key.environment;
+    request.apiKeyId = key.id;
     // Best effort; not worth failing the request over.
     this.prisma.apiKey.update({ where: { id: key.id }, data: { lastUsedAt: new Date() } }).catch(() => undefined);
     return true;

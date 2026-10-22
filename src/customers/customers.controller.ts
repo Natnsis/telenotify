@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../common/api-key.guard';
+import { RequestLogInterceptor } from '../request-log/request-log.interceptor';
 import { CurrentEnvironment, EnvironmentWithOrg } from '../common/request-context';
 import { CreateLinkDto, UpsertCustomerDto } from './customers.dto';
 import { CustomersService } from './customers.service';
@@ -8,6 +9,7 @@ import { CustomersService } from './customers.service';
 @ApiTags('customers')
 @ApiSecurity('api-key')
 @UseGuards(ApiKeyGuard)
+@UseInterceptors(RequestLogInterceptor)
 @Controller('v1/customers')
 export class CustomersController {
   constructor(private readonly customers: CustomersService) {}

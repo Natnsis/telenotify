@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../common/api-key.guard';
+import { RequestLogInterceptor } from '../request-log/request-log.interceptor';
 import { CurrentEnvironment, EnvironmentWithOrg } from '../common/request-context';
 import { CreateVerificationDto } from './verifications.dto';
 import { VerificationsService } from './verifications.service';
@@ -8,6 +9,7 @@ import { VerificationsService } from './verifications.service';
 @ApiTags('verifications')
 @ApiSecurity('api-key')
 @UseGuards(ApiKeyGuard)
+@UseInterceptors(RequestLogInterceptor)
 @Controller('v1/verifications')
 export class VerificationsController {
   constructor(private readonly verifications: VerificationsService) {}
