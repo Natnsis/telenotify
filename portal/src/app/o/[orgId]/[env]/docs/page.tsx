@@ -100,10 +100,19 @@ if (message.status === 'UNDELIVERABLE') {
             You can also check first: <code className="font-mono text-ink">GET /v1/customers/:externalId</code> returns{' '}
             <code className="font-mono text-ink">reachable: true | false</code>.
           </p>
+          <p>
+            Already use AfroMessage? Turn on{' '}
+            <Link href={`/o/${orgId}/${env}/sms-fallback`} className="font-medium text-brand hover:underline">
+              SMS fallback
+            </Link>{' '}
+            and we send the SMS for you through your own account. The message then carries{' '}
+            <code className="font-mono text-ink">fallback: {'{'} channel: &quot;sms&quot;, status {'}'}</code> and you get{' '}
+            <code className="font-mono text-ink">message.fallback_sent</code> or <code className="font-mono text-ink">message.fallback_failed</code>.
+          </p>
         </Section>
 
         <Section n={5} title="Listen for events">
-          <p>Set a webhook URL to receive message.sent, message.undeliverable, message.failed, message.received, customer.linked and customer.blocked. Verify the signature using the snippet on the Webhooks page.</p>
+          <p>Set a webhook URL to receive message.sent, message.undeliverable, message.failed, message.received, message.fallback_sent, message.fallback_failed, customer.linked and customer.blocked. Verify the signature using the snippet on the Webhooks page.</p>
           <CodeBlock
             language="json"
             code={`{
