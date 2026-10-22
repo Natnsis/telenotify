@@ -1,0 +1,63 @@
+const SEND_URL = 'https://api.afromessage.com/api/send';
+const TIMEOUT_MS = 10_000;
+
+export interface AfroMessageCredentials {
+  token: string;
+  /** Identifier id from the AfroMessage dashboard; omitted on beta accounts. */
+  identifierId?: string | null;
+  senderName?: string | null;
+}
+
+export class AfroMessageError extends Error {
+  constructor(
+    message: string,
+    /** Network errors and 5xx: worth trying again. Rejections (bad token, no balance) are not. */
+    readonly retryable: boolean,
+  ) {
+    super(message);
+  }
+}
+
+// AfroMessage answers 200 with { acknowledge: "success" | "error", response } for
+// accepted and rejected requests alike, so both the HTTP status and the body count.
+export async function sendAfroMessage(
+  credentials: AfroMessageCredentials,
+  to: string,
+  message: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ messageId: string | null }> {
+  const body: Record<string, string> = { to, message };
+  if (credentials.identifierId) body.from = credentials.identifierId;
+  if (credentials.senderName) body.sender = credentials.senderName;
+
+  let response: Response;
+  try {
+    response = await fetchImpl(SEND_URL, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${credentials.token}`, 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch (error) {
+    throw new AfroMessageError(`AfroMessage unreachable: ${(error as Error).message}`, true);
+  }
+
+  const raw = await response.text();
+  let data: { acknowledge?: string; response?: { message_id?: string; errors?: unknown } } | null = null;
+  try {
+    data = raw ? JSON.parse(raw) : null;
+  } catch {
+    // Not JSON; reported below.
+  }
+  if (response.status >= 500) throw new AfroMessageError(`AfroMessage error (HTTP ${response.status})`, true);
+  if (!response.ok || data?.acknowledge !== 'success') {
+    const detail = data?.response?.errors ?? data?.response ?? raw.slice(0, 200);
+    throw new AfroMessageError(`AfroMessage rejected the SMS (HTTP ${response.status}): ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`, false);
+  }
+  return { messageId: data.response?.message_id ?? null };
+}
+
+/** AfroMessage expects +2519…; our stored numbers are digits only. */
+export function toAfroMessageNumber(phone: string): string {
+  return phone.startsWith('+') ? phone : `+${phone}`;
+}
