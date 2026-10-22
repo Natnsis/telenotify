@@ -76,6 +76,7 @@ model Organization {
   invitations  Invitation[]
   auditEvents  AuditEvent[]
   usageAlerts  UsageAlert[]
+  templates    MessageTemplate[]
 }
 
 enum Role {
@@ -194,6 +195,8 @@ model Customer {
   phone            String?
   telegramChatId   String?
   telegramUsername String?
+  // Preferred language for templates: en | am | om | ti.
+  locale           String?
   linkedAt         DateTime?
   // Set when the customer blocks the bot; cleared if they /start again.
   blockedAt        DateTime?
@@ -251,6 +254,9 @@ model Message {
   direction         Direction
   status            MessageStatus
   priority          MessagePriority @default(NORMAL)
+  // Set when the text came from a template.
+  templateKey       String?
+  locale            String?
   // not_linked | blocked | chat_gone | telegram_unavailable | telegram_rejected
   reason            String?
   text              String
@@ -378,4 +384,26 @@ model UsageAlert {
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@unique([orgId, period, threshold])
+}
+
+// ---------- Templates ----------
+
+// Reusable message text with per-language variants and {{placeholders}}. Shared by
+// an organization's sandbox and live environments.
+model MessageTemplate {
+  id            String   @id @default(uuid())
+  orgId         String
+  // Used in the API: { "template": "payment_received" }
+  key           String
+  name          String
+  description   String?
+  // { "en": "...", "am": "..." }
+  variants      Json
+  defaultLocale String   @default("en")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, key])
 }

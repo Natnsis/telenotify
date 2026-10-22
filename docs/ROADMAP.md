@@ -29,7 +29,7 @@ Agreed order (2026-10-22). Tick items as they ship; keep this file current.
 - [x] Theme switcher: light / dark / follow system, for the portal and landing page (remembered per user)
 
 ## Proposed: payment-gateway readiness (from the 2026-10-22 scenario, not yet agreed)
-- [ ] Per-bot send rate limits and a priority lane so OTP/transaction messages jump ahead of bulk sends
+- [x] Per-bot send rate limits and a priority lane so OTP/transaction messages jump ahead of bulk sends
 - [ ] Message templates with Amharic/English variants
 - [ ] Optional "bring your own SMS provider" fallback (e.g. AfroMessage credentials), so Telenotify sends the SMS itself when Telegram can't
 - [ ] Data-residency and compliance notes for regulated customers (hosting location, DPA)
