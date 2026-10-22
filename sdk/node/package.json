@@ -1,0 +1,20 @@
+{
+  "name": "@telenotify/node",
+  "version": "0.1.0",
+  "description": "Official Node.js and TypeScript client for the Telenotify API: Telegram notifications and phone verification with an instant fallback signal.",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/*.test.js"
+  },
+  "keywords": ["telegram", "notifications", "otp", "phone verification", "sms", "ethiopia"],
+  "devDependencies": {
+    "typescript": "~5.8.0",
+    "@types/node": "^22.0.0"
+  }
+}
