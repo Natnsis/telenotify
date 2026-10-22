@@ -2,10 +2,10 @@
 
 Agreed order (2026-10-22). Tick items as they ship; keep this file current.
 
-## Batch 1: Developer debugging
-- [ ] Webhook delivery log in the portal: every event with status, attempts, HTTP response, payload
-- [ ] Resend a webhook event from the portal
-- [ ] Message detail view: timeline, reason, request, related webhook events, "copy as curl"
+## Batch 1: Developer debugging ✅ (done 2026-10-22)
+- [x] Webhook delivery log in the portal: every event with status, attempts, HTTP response, payload
+- [x] Resend a webhook event from the portal
+- [x] Message detail view: timeline, reason, request, related webhook events, "copy as curl"
 
 ## Batch 2: Required before taking money
 - [ ] Account settings: change name and password, linked Google account, delete account
