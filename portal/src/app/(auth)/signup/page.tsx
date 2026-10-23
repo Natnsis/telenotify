@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import { PasswordInput } from '@/components/password-input';
 import { GoogleButton } from '@/components/google-button';
 import { Alert, Button, Input, TextLink } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { isStrongPassword } from '@/lib/password';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function SignupPage() {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    if (!isStrongPassword(String(form.get('password') ?? ''))) return setError('Choose a stronger password: it needs every item in the checklist.');
     setLoading(true);
     setError(null);
     try {
@@ -37,7 +40,7 @@ export default function SignupPage() {
         {error && <Alert>{error}</Alert>}
         <Input label="Full name" name="name" autoComplete="name" required />
         <Input label="Work email" name="email" type="email" autoComplete="email" required />
-        <Input label="Password" name="password" type="password" autoComplete="new-password" minLength={8} required hint="At least 8 characters." />
+        <PasswordInput label="Password" name="password" autoComplete="new-password" minLength={8} required showStrength />
         <Button type="submit" loading={loading} className="w-full">
           Create account
         </Button>

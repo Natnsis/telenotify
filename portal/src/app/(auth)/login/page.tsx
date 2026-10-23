@@ -5,6 +5,7 @@ import { FormEvent, Suspense, useState } from 'react';
 import { GoogleButton } from '@/components/google-button';
 import { Alert, Button, Input, TextLink } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { PasswordInput } from '@/components/password-input';
 
 const errors: Record<string, string> = {
   google_failed: 'Google sign-in failed. Please try again.',
@@ -39,7 +40,7 @@ function LoginForm() {
       <form onSubmit={onSubmit} className="space-y-4">
         {error && <Alert>{error}</Alert>}
         <Input label="Email" name="email" type="email" autoComplete="email" required />
-        <Input label="Password" name="password" type="password" autoComplete="current-password" required />
+        <PasswordInput label="Password" name="password" autoComplete="current-password" required />
         <div className="text-right text-sm">
           <TextLink href="/forgot-password">Forgot password?</TextLink>
         </div>

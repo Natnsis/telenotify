@@ -2,8 +2,10 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, Suspense, useState } from 'react';
-import { Alert, Button, Input, TextLink } from '@/components/ui';
+import { PasswordInput } from '@/components/password-input';
+import { Alert, Button, TextLink } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { isStrongPassword } from '@/lib/password';
 
 function ResetForm() {
   const router = useRouter();
@@ -14,6 +16,7 @@ function ResetForm() {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    if (!isStrongPassword(String(form.get('password') ?? ''))) return setError('Choose a stronger password: it needs every item in the checklist.');
     if (form.get('password') !== form.get('confirm')) return setError('Passwords do not match');
     setLoading(true);
     setError(null);
@@ -31,8 +34,8 @@ function ResetForm() {
       <h1 className="mb-5 font-display text-2xl font-bold tracking-tight text-ink">Choose a new password</h1>
       <form onSubmit={onSubmit} className="space-y-4">
         {error && <Alert>{error}</Alert>}
-        <Input label="New password" name="password" type="password" autoComplete="new-password" minLength={8} required />
-        <Input label="Confirm password" name="confirm" type="password" autoComplete="new-password" minLength={8} required />
+        <PasswordInput label="New password" name="password" autoComplete="new-password" minLength={8} required showStrength />
+        <PasswordInput label="Confirm password" name="confirm" autoComplete="new-password" minLength={8} required />
         <Button type="submit" loading={loading} className="w-full">
           Update password
         </Button>
