@@ -29,10 +29,11 @@ export class MessagesController {
   }
 
   @Get()
-  @ApiQuery({ name: 'customer', required: false })
+  @ApiOperation({ summary: 'List messages, newest first', description: 'Pass `nextCursor` from the previous page as `cursor` to get the next page.' })
+  @ApiQuery({ name: 'customer', required: false, description: 'Only this customer (externalId)' })
   @ApiQuery({ name: 'status', required: false, enum: MessageStatus })
-  @ApiQuery({ name: 'cursor', required: false })
-  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'cursor', required: false, description: 'nextCursor from the previous page' })
+  @ApiQuery({ name: 'limit', required: false, description: '1–100, default 50' })
   list(
     @CurrentEnvironment() environment: EnvironmentWithOrg,
     @Query('customer') customer?: string,
@@ -44,6 +45,7 @@ export class MessagesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get one message and its current status' })
   get(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('id') id: string) {
     return this.messages.get(environment, id);
   }

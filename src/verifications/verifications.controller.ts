@@ -27,6 +27,7 @@ export class VerificationsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Check a verification', description: 'Poll until `status` is VERIFIED, FAILED or EXPIRED, or listen for the verification.* webhook events.' })
   get(@CurrentEnvironment() environment: EnvironmentWithOrg, @Param('id') id: string) {
     return this.verifications.get(environment, id);
   }
