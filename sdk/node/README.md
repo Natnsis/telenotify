@@ -15,6 +15,8 @@ npm install @telenotify/node
 
 ## Quick start
 
+Get a sandbox key (`tn_test_…`) from the [developer portal](https://telenotify.duckdns.org). The API address is `https://telenotify-api.duckdns.org`.
+
 ```ts
 import { Telenotify } from '@telenotify/node';
 

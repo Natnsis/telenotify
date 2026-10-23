@@ -3,16 +3,56 @@
   "version": "0.1.0",
   "description": "Official Node.js and TypeScript client for the Telenotify API: Telegram notifications and phone verification with an instant fallback signal.",
   "license": "MIT",
+  "author": "sami-yesha",
+  "homepage": "https://telenotify.duckdns.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sami-yesha/telenotify.git",
+    "directory": "sdk/node"
+  },
+  "bugs": {
+    "url": "https://github.com/sami-yesha/telenotify/issues"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist", "README.md"],
-  "engines": { "node": ">=18" },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test test/*.test.js"
+    "test": "npm run build && node --test test/*.test.js",
+    "prepublishOnly": "npm test"
   },
-  "keywords": ["telegram", "notifications", "otp", "phone verification", "sms", "ethiopia"],
+  "keywords": [
+    "amharic",
+    "ethiopia",
+    "notifications",
+    "otp",
+    "phone verification",
+    "sdk",
+    "sms",
+    "telegram",
+    "telegram-bot",
+    "typescript",
+    "webhooks"
+  ],
   "devDependencies": {
     "typescript": "~5.8.0",
     "@types/node": "^22.0.0"
