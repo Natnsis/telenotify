@@ -109,3 +109,29 @@ export function toPostman(spec: OpenApiSpec, baseUrl: string) {
     item: [...groups.entries()].map(([name, item]) => ({ name: name[0].toUpperCase() + name.slice(1), item })),
   };
 }
+
+export interface Field {
+  name: string;
+  type: string;
+  required: boolean;
+  description?: string;
+  enum?: unknown[];
+  example?: unknown;
+}
+
+// Top-level fields of an operation's JSON body, for the reference table.
+export function bodyFields(spec: OpenApiSpec, op: OpenApiOperation): Field[] {
+  const schema = resolve(spec, op.requestBody?.content?.['application/json']?.schema);
+  if (!schema?.properties) return [];
+  return Object.entries(schema.properties).map(([name, raw]) => {
+    const field = resolve(spec, raw) ?? raw;
+    return {
+      name,
+      type: field.type ?? (field.enum ? 'string' : 'object'),
+      required: schema.required?.includes(name) ?? false,
+      description: field.description,
+      enum: field.enum,
+      example: field.example,
+    };
+  });
+}
