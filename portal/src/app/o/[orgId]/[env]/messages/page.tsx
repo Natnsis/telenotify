@@ -1,7 +1,6 @@
 'use client';
 
 import { ArrowDownLeft, ArrowUpRight, Inbox, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import useSWRInfinite from 'swr/infinite';
 import { StatusBadge } from '@/components/status-badge';
@@ -9,12 +8,13 @@ import { Button, Card, Empty, formatDate, PageHeader, Select, Skeleton, Table, t
 import { fetcher } from '@/lib/api';
 import { envPath, useOrgParams } from '@/lib/hooks';
 import type { Message, MessageStatus, Page } from '@/lib/types';
+import { useProgressRouter } from '@/components/route-progress';
 
 const statuses: MessageStatus[] = ['QUEUED', 'SENT', 'UNDELIVERABLE', 'FAILED', 'RECEIVED'];
 
 export default function MessagesPage() {
   const { orgId, env } = useOrgParams();
-  const router = useRouter();
+  const router = useProgressRouter();
   const [status, setStatus] = useState('');
   const [customer, setCustomer] = useState('');
   const query = new URLSearchParams({ limit: '25', ...(status ? { status } : {}), ...(customer ? { customer } : {}) });

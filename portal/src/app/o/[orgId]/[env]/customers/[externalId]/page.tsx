@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Link2, MessageSquare, QrCode, Send, ShieldCheck, Unlink, UserRound } from 'lucide-react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 import useSWR from 'swr';
 import { ConnectQr } from '@/components/qr-code';
@@ -11,9 +11,10 @@ import { Alert, Badge, Button, Card, Empty, formatDate, PageHeader, Skeleton, Ta
 import { api, ApiError, fetcher } from '@/lib/api';
 import { envPath, useOrgParams } from '@/lib/hooks';
 import type { CustomerDetail, LinkResult } from '@/lib/types';
+import { useProgressRouter } from '@/components/route-progress';
 
 export default function CustomerPage() {
-  const router = useRouter();
+  const router = useProgressRouter();
   const { orgId, env } = useOrgParams();
   const { externalId: raw } = useParams<{ externalId: string }>();
   const externalId = decodeURIComponent(raw);

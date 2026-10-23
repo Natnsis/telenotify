@@ -1,17 +1,17 @@
 'use client';
 
 import { Search, Users } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import useSWRInfinite from 'swr/infinite';
 import { Badge, Button, Card, Empty, formatDate, PageHeader, Select, Skeleton, Table } from '@/components/ui';
 import { fetcher } from '@/lib/api';
 import { envPath, useOrgParams } from '@/lib/hooks';
 import type { Customer, Page } from '@/lib/types';
+import { useProgressRouter } from '@/components/route-progress';
 
 export default function CustomersPage() {
   const { orgId, env } = useOrgParams();
-  const router = useRouter();
+  const router = useProgressRouter();
   const [search, setSearch] = useState('');
   const [linked, setLinked] = useState('');
   const query = new URLSearchParams({ limit: '25', ...(search ? { search } : {}), ...(linked ? { linked } : {}) });

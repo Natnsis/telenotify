@@ -22,11 +22,11 @@ import {
   Webhook,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetcher } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import type { Customer, EnvName, Page } from '@/lib/types';
+import { useProgressRouter } from '@/components/route-progress';
 
 type Item = { id: string; label: string; hint?: string; icon: React.ComponentType<{ className?: string }>; href: string };
 
@@ -34,7 +34,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ⌘K / Ctrl+K: jump to any page, a customer by id, or a message by id.
 export function CommandPalette({ orgId, env, open, onOpenChange }: { orgId: string; env: EnvName; open: boolean; onOpenChange: (open: boolean) => void }) {
-  const router = useRouter();
+  const router = useProgressRouter();
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const [customers, setCustomers] = useState<Customer[]>([]);
