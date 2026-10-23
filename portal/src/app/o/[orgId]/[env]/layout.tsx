@@ -28,17 +28,19 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import { CommandPalette } from '@/components/command-palette';
 import { Logo } from '@/components/logo';
+import { SplashScreen } from '@/components/splash';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { WelcomeTour } from '@/components/welcome-tour';
-import { cn, Spinner } from '@/components/ui';
+import { cn } from '@/components/ui';
 import { api, fetcher } from '@/lib/api';
 import { useOrg, useOrgParams, useRequireUser } from '@/lib/hooks';
 import type { EnvName, OrgSummary } from '@/lib/types';
+import { useProgressRouter } from '@/components/route-progress';
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; sandboxOnly?: boolean };
 
@@ -111,11 +113,7 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
     );
   }
   if (!user || !org) {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <Spinner />
-      </div>
-    );
+    return <SplashScreen messages={['Loading your workspace…', 'Checking your bots…', 'Almost there…']} />;
   }
 
   // Keep the current page when switching environments (playground has no live twin).
@@ -172,14 +170,24 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
                 <Menu className="size-5" />
               </button>
               <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-sm">
-                <span className="hidden truncate text-muted sm:inline">{org.name}</span>
+                <Link href={base} className="hidden truncate rounded-md px-1 py-0.5 text-muted transition-colors hover:bg-subtle hover:text-ink sm:inline">
+                  {org.name}
+                </Link>
                 <ChevronRight className="hidden size-3.5 shrink-0 text-muted/60 sm:block" />
-                <span className="truncate font-medium text-ink">{current.label}</span>
-                {current.detail && (
+                {current.detail ? (
                   <>
+                    <Link href={`${base}${current.href}`} className="truncate rounded-md px-1 py-0.5 text-muted transition-colors hover:bg-subtle hover:text-ink">
+                      {current.label}
+                    </Link>
                     <ChevronRight className="size-3.5 shrink-0 text-muted/60" />
-                    <span className="truncate text-muted">Details</span>
+                    <span aria-current="page" className="truncate px-1 font-medium text-ink">
+                      Details
+                    </span>
                   </>
+                ) : (
+                  <span aria-current="page" className="truncate px-1 font-medium text-ink">
+                    {current.label}
+                  </span>
                 )}
               </nav>
               {env === 'sandbox' && (
@@ -222,12 +230,12 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
 }
 
 // The sidebar entry for the current path, for the breadcrumb.
-function currentPage(subpath: string): { label: string; detail: boolean } {
+function currentPage(subpath: string): { label: string; href: string; detail: boolean } {
   const items = groups.flatMap((g) => g.items);
-  if (subpath === '' || subpath === '/') return { label: 'Get started', detail: false };
+  if (subpath === '' || subpath === '/') return { label: 'Get started', href: '', detail: false };
   const match = items.filter((i) => i.href && subpath.startsWith(i.href)).sort((a, b) => b.href.length - a.href.length)[0];
-  if (!match) return { label: 'Dashboard', detail: false };
-  return { label: match.label, detail: subpath.length > match.href.length + 1 };
+  if (!match) return { label: 'Dashboard', href: '', detail: false };
+  return { label: match.label, href: match.href, detail: subpath.length > match.href.length + 1 };
 }
 
 function Sidebar({ base, env, subpath, orgSwitcher, footer }: { base: string; env: EnvName; subpath: string; orgSwitcher: ReactNode; footer: ReactNode }) {
@@ -314,7 +322,7 @@ function useClickOutside(open: boolean, close: () => void) {
 }
 
 function OrgSwitcher({ currentId, currentName }: { currentId: string; currentName: string }) {
-  const router = useRouter();
+  const router = useProgressRouter();
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(open, () => setOpen(false));
   const { data: orgs } = useSWR<OrgSummary[]>('/portal/orgs', fetcher);
@@ -364,7 +372,7 @@ function OrgSwitcher({ currentId, currentName }: { currentId: string; currentNam
 }
 
 function UserMenu({ name, email }: { name: string; email: string }) {
-  const router = useRouter();
+  const router = useProgressRouter();
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(open, () => setOpen(false));
   return (
