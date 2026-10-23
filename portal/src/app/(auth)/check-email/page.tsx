@@ -12,6 +12,7 @@ export default function CheckEmailPage() {
   const { data: me, error } = useSWR<Me>('/auth/me', fetcher, { shouldRetryOnError: false });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
     if (error instanceof ApiError && error.status === 401) router.replace('/login');
@@ -20,9 +21,15 @@ export default function CheckEmailPage() {
 
   async function resend() {
     setLoading(true);
-    await api('/auth/resend-verification', { method: 'POST' });
-    setLoading(false);
-    setSent(true);
+    setFailure(null);
+    try {
+      await api('/auth/resend-verification', { method: 'POST' });
+      setSent(true);
+    } catch (e) {
+      setFailure(e instanceof ApiError ? e.message : 'Could not reach the server. Try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function logout() {
@@ -36,6 +43,11 @@ export default function CheckEmailPage() {
       <p className="mt-2 text-sm text-muted">
         We sent a verification link to <span className="font-medium text-ink">{me?.email ?? 'your email'}</span>. Open it to continue.
       </p>
+      {failure && (
+        <div className="mt-4">
+          <Alert>{failure}</Alert>
+        </div>
+      )}
       {sent && (
         <div className="mt-4">
           <Alert tone="green">A new link is on its way.</Alert>
