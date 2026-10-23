@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { ReactNode } from 'react';
+import { CodeTabs } from '@/components/code-tabs';
 import { Card, CodeBlock, PageHeader } from '@/components/ui';
 import { API_BASE_URL } from '@/lib/api';
 import { useOrgParams } from '@/lib/hooks';
+import { snippets, toJs } from '@/lib/snippets';
 
 const testCustomers = [
   ['test_linked', 'Immediately QUEUED, then SENT.'],
@@ -21,10 +23,63 @@ const statuses = [
   ['FAILED', 'Telegram kept failing or rejected the message. Retry later or fall back.'],
 ];
 
+const sendBody = {
+  to: 'customer_123',
+  text: 'Your order #1042 is out for delivery',
+  buttons: [[{ text: 'Track order', url: 'https://shop.example.com/o/1042' }]],
+  idempotencyKey: 'order-1042-shipped',
+};
+
+const templateBody = {
+  to: 'customer_123',
+  template: 'payment_received',
+  params: { amount: '1,250', payer: 'Abebe', ref: 'TX-88' },
+  priority: 'high',
+};
+
+// What to do with each result; the same logic in every language.
+const fallbackSamples = {
+  node: `const message = await telenotify.messages.send({ to: customer.id, text });
+
+if (message.status === 'UNDELIVERABLE') {
+  await sendSms(customer.phone, text); // your own provider
+}
+// QUEUED: the final result arrives as a webhook event
+// (message.sent / message.undeliverable / message.failed).`,
+  python: `message = requests.post(f"{BASE_URL}/v1/messages", headers=HEADERS,
+                        json={"to": customer.id, "text": text}, timeout=10).json()
+
+if message["status"] == "UNDELIVERABLE":
+    send_sms(customer.phone, text)  # your own provider
+# QUEUED: the final result arrives as a webhook event.`,
+  go: `var message struct {
+	Status string \`json:"status"\`
+	Reason string \`json:"reason"\`
+}
+json.NewDecoder(res.Body).Decode(&message)
+
+if message.Status == "UNDELIVERABLE" {
+	sendSMS(customer.Phone, text) // your own provider
+}
+// QUEUED: the final result arrives as a webhook event.`,
+  php: `$message = json_decode(curl_exec($ch), true);
+
+if ($message['status'] === 'UNDELIVERABLE') {
+    sendSms($customer['phone'], $text); // your own provider
+}
+// QUEUED: the final result arrives as a webhook event.`,
+  java: `var message = mapper.readTree(response.body());
+
+if ("UNDELIVERABLE".equals(message.get("status").asText())) {
+    sendSms(customer.phone(), text); // your own provider
+}
+// QUEUED: the final result arrives as a webhook event.`,
+};
+
 export default function DocsPage() {
   const { orgId, env } = useOrgParams();
   const key = env === 'sandbox' ? 'tn_test_…' : 'tn_live_…';
-  const h = `  -H "x-api-key: ${key}" \\\n  -H "content-type: application/json"`;
+  const ctx = { baseUrl: API_BASE_URL, apiKey: key };
 
   return (
     <>
@@ -43,9 +98,18 @@ export default function DocsPage() {
       <div className="space-y-6">
         <Section n={1} title="Connect a customer to your bot">
           <p>Create a one-time link for a customer in your system and show it in your app, a receipt or an SMS. When they tap it and press Start, they&apos;re connected.</p>
-          <CodeBlock
-            language="bash"
-            code={`curl -X POST ${API_BASE_URL}/v1/customers/link \\\n${h} \\\n  -d '{"externalId": "customer_123", "phone": "0911223344"}'\n\n# → { "url": "https://t.me/your_bot?start=…", "expiresAt": "…" }`}
+          <CodeTabs
+            title="POST /v1/customers/link"
+            samples={snippets(
+              {
+                method: 'POST',
+                path: '/v1/customers/link',
+                body: { externalId: 'customer_123', phone: '0911223344' },
+                sdk: "const { url } = await telenotify.customers.createLink('customer_123', { phone: '0911223344' });",
+                response: '{ "url": "https://t.me/your_bot?start=…", "expiresAt": "…" }',
+              },
+              ctx,
+            )}
           />
           <p>
             <code className="font-mono text-ink">externalId</code> is your own id for the customer. The phone is optional; on a live bot, it lets customers connect by sharing their number instead.
@@ -53,9 +117,18 @@ export default function DocsPage() {
         </Section>
 
         <Section n={2} title="Send a message">
-          <CodeBlock
-            language="bash"
-            code={`curl -X POST ${API_BASE_URL}/v1/messages \\\n${h} \\\n  -d '{\n    "to": "customer_123",\n    "text": "Your order #1042 is out for delivery",\n    "buttons": [[{ "text": "Track order", "url": "https://shop.example.com/o/1042" }]],\n    "idempotencyKey": "order-1042-shipped"\n  }'`}
+          <CodeTabs
+            title="POST /v1/messages"
+            samples={snippets(
+              {
+                method: 'POST',
+                path: '/v1/messages',
+                body: sendBody,
+                sdk: `const message = await telenotify.messages.send(${toJs(sendBody)});`,
+                response: '{ "id": "…", "status": "QUEUED", "to": "customer_123", … }',
+              },
+              ctx,
+            )}
           />
           <p>Reusing an idempotency key returns the original message instead of sending twice.</p>
           <p>
@@ -69,9 +142,9 @@ export default function DocsPage() {
             Create a template on the <Link href={`/o/${orgId}/${env}/templates`} className="font-medium text-brand hover:underline">Templates</Link> page with an English, Amharic, Afaan Oromo or
             Tigrinya version, then send it by key with values for its {'{{placeholders}}'}:
           </p>
-          <CodeBlock
-            language="bash"
-            code={`curl -X POST ${API_BASE_URL}/v1/messages \\\n${h} \\\n  -d '{\n    "to": "customer_123",\n    "template": "payment_received",\n    "params": { "amount": "1,250", "payer": "Abebe", "ref": "TX-88" },\n    "priority": "high"\n  }'`}
+          <CodeTabs
+            title="POST /v1/messages"
+            samples={snippets({ method: 'POST', path: '/v1/messages', body: templateBody, sdk: `await telenotify.messages.send(${toJs(templateBody)});` }, ctx)}
           />
           <p>
             The language is the <code className="font-mono text-ink">locale</code> you pass, else the customer&apos;s locale (set with <code className="font-mono text-ink">PUT /v1/customers/:externalId</code>), else the
@@ -82,20 +155,7 @@ export default function DocsPage() {
         <Section n={4} title="Fall back when Telegram can't reach the customer">
           <p>Telenotify only sends on Telegram. When a customer can&apos;t be reached, we tell you, and your existing SMS or email provider takes over.</p>
           <Table rows={statuses} />
-          <CodeBlock
-            language="javascript"
-            code={`const res = await fetch('${API_BASE_URL}/v1/messages', {
-  method: 'POST',
-  headers: { 'x-api-key': process.env.TELENOTIFY_KEY, 'content-type': 'application/json' },
-  body: JSON.stringify({ to: customer.id, text }),
-});
-const message = await res.json();
-
-if (message.status === 'UNDELIVERABLE') {
-  await sendSms(customer.phone, text); // your own provider
-}
-// QUEUED: the final result arrives as a webhook event (message.sent / undeliverable / failed).`}
-          />
+          <CodeTabs title="Handle the result" samples={fallbackSamples} />
           <p>
             You can also check first: <code className="font-mono text-ink">GET /v1/customers/:externalId</code> returns{' '}
             <code className="font-mono text-ink">reachable: true | false</code>.
@@ -129,9 +189,18 @@ if (message.status === 'UNDELIVERABLE') {
             <p>
               Replace SMS one-time codes. Create a verification, send the person to its link (a “Verify with Telegram” button), and they share their number with your bot in one tap. Telegram vouches the number belongs to that account, so there&apos;s no code to type and no resend.
             </p>
-            <CodeBlock
-              language="bash"
-              code={`curl -X POST ${API_BASE_URL}/v1/verifications \\\n${h} \\\n  -d '{"phone": "0911223344", "externalId": "customer_123"}'\n\n# → { "id": "…", "status": "PENDING", "url": "https://t.me/your_bot?start=v_…" }`}
+            <CodeTabs
+              title="POST /v1/verifications"
+              samples={snippets(
+                {
+                  method: 'POST',
+                  path: '/v1/verifications',
+                  body: { phone: '0911223344', externalId: 'customer_123' },
+                  sdk: "const verification = await telenotify.verifications.create({ phone: '0911223344', externalId: 'customer_123' });\n// Send the person to verification.url",
+                  response: '{ "id": "…", "status": "PENDING", "url": "https://t.me/your_bot?start=v_…" }',
+                },
+                ctx,
+              )}
             />
             <Table
               rows={[

@@ -5,9 +5,11 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { OutcomesChart } from '@/components/outcomes-chart';
-import { Badge, Card, CodeBlock, cn, Skeleton } from '@/components/ui';
+import { CodeTabs } from '@/components/code-tabs';
+import { Badge, Card, cn, Skeleton } from '@/components/ui';
 import { API_BASE_URL, fetcher } from '@/lib/api';
 import { envPath, useEnvironment, useOrg, useOrgParams } from '@/lib/hooks';
+import { snippets, toJs } from '@/lib/snippets';
 import type { Analytics, ApiKey } from '@/lib/types';
 
 export default function GetStartedPage() {
@@ -50,10 +52,11 @@ export default function GetStartedPage() {
         ];
   const doneCount = steps.filter((s) => s.done).length;
 
-  const curl = `curl -X POST ${API_BASE_URL}/v1/messages \\
-  -H "x-api-key: ${env === 'sandbox' ? 'tn_test_…' : 'tn_live_…'}" \\
-  -H "content-type: application/json" \\
-  -d '{"to": "${env === 'sandbox' ? 'test_linked' : 'customer_123'}", "text": "Your order is on its way 🚚"}'`;
+  const firstMessage = { to: env === 'sandbox' ? 'test_linked' : 'customer_123', text: 'Your order is on its way 🚚' };
+  const samples = snippets(
+    { method: 'POST', path: '/v1/messages', body: firstMessage, sdk: `const message = await telenotify.messages.send(${toJs(firstMessage)});` },
+    { baseUrl: API_BASE_URL, apiKey: env === 'sandbox' ? 'tn_test_…' : 'tn_live_…' },
+  );
 
   return (
     <div className="space-y-6">
@@ -164,7 +167,7 @@ export default function GetStartedPage() {
       </Card>
 
       <Card icon={MessageSquare} title="Send your first message" description="One call. The response tells you right away if the customer can’t be reached.">
-        <CodeBlock language="bash" code={curl} />
+        <CodeTabs samples={samples} title="POST /v1/messages" />
         <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted">
           Possible results:
           <Badge dot>queued</Badge>
