@@ -1,9 +1,10 @@
 'use client';
 
-import { Check, Copy, X } from 'lucide-react';
+import { Check, ChevronsUpDown, Copy, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
-import { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, useEffect, useState } from 'react';
+import { ButtonHTMLAttributes, Children, InputHTMLAttributes, isValidElement, ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export { cn } from '@/lib/cn';
 import { cn } from '@/lib/cn';
@@ -56,17 +57,195 @@ export function Input({ label, hint, className, ...props }: InputHTMLAttributes<
   );
 }
 
-export function Select({ className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+type SelectOption = { value: string; label: ReactNode; text: string; disabled?: boolean };
+
+/**
+ * Themed replacement for <select>. Takes the same <option> children and calls
+ * onChange with an event-like { target: { value } }, so it drops in for the
+ * native element. With `name` it also works in forms (FormData).
+ */
+export function Select({
+  value,
+  defaultValue,
+  onChange,
+  name,
+  className,
+  disabled,
+  children,
+  'aria-label': ariaLabel,
+}: {
+  value?: string;
+  defaultValue?: string;
+  onChange?: (event: { target: { value: string; name?: string } }) => void;
+  name?: string;
+  className?: string;
+  disabled?: boolean;
+  children: ReactNode;
+  'aria-label'?: string;
+}) {
+  const options: SelectOption[] = Children.toArray(children).flatMap((child) => {
+    if (!isValidElement<{ value?: string; children?: ReactNode; disabled?: boolean }>(child)) return [];
+    const label = child.props.children;
+    const text = typeof label === 'string' ? label : Children.toArray(label).join('');
+    return [{ value: String(child.props.value ?? text), label, text, disabled: child.props.disabled }];
+  });
+  const [inner, setInner] = useState(defaultValue ?? options[0]?.value ?? '');
+  const current = value ?? inner;
+  const selected = options.find((o) => o.value === current) ?? options[0];
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const [rect, setRect] = useState<{ left: number; top: number; width: number; above: boolean } | null>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLUListElement>(null);
+  const typed = useRef({ text: '', at: 0 });
+  const id = useId();
+
+  const place = useCallback(() => {
+    const r = button.current?.getBoundingClientRect();
+    if (!r) return;
+    const height = Math.min(320, options.length * 38 + 12);
+    const above = window.innerHeight - r.bottom < height + 12 && r.top > height + 12;
+    setRect({ left: r.left, width: r.width, top: above ? r.top - height - 6 : r.bottom + 6, above });
+  }, [options.length]);
+
+  const openMenu = () => {
+    if (disabled) return;
+    place();
+    setActive(Math.max(0, options.findIndex((o) => o.value === selected?.value)));
+    setOpen(true);
+  };
+
+  const choose = (option: SelectOption) => {
+    if (option.disabled) return;
+    if (value === undefined) setInner(option.value);
+    onChange?.({ target: { value: option.value, name } });
+    setOpen(false);
+    button.current?.focus();
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (!button.current?.contains(e.target as Node) && !list.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    list.current?.focus();
+    return () => {
+      document.removeEventListener('mousedown', close);
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [open, place]);
+
+  useEffect(() => {
+    if (open) list.current?.querySelector(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' });
+  }, [active, open]);
+
+  const move = (delta: number) => {
+    setActive((i) => {
+      for (let step = 1; step <= options.length; step++) {
+        const next = (i + delta * step + options.length) % options.length;
+        if (!options[next].disabled) return next;
+      }
+      return i;
+    });
+  };
+
+  const onListKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') (e.preventDefault(), move(1));
+    else if (e.key === 'ArrowUp') (e.preventDefault(), move(-1));
+    else if (e.key === 'Home') (e.preventDefault(), setActive(0));
+    else if (e.key === 'End') (e.preventDefault(), setActive(options.length - 1));
+    else if (e.key === 'Enter' || e.key === ' ') (e.preventDefault(), options[active] && choose(options[active]));
+    else if (e.key === 'Escape') (e.preventDefault(), setOpen(false), button.current?.focus());
+    else if (e.key === 'Tab') setOpen(false);
+    else if (e.key.length === 1) {
+      // Type to jump to an option.
+      const now = Date.now();
+      typed.current = { text: (now - typed.current.at < 600 ? typed.current.text : '') + e.key.toLowerCase(), at: now };
+      const match = options.findIndex((o) => o.text.toLowerCase().startsWith(typed.current.text));
+      if (match >= 0) setActive(match);
+    }
+  };
+
   return (
-    <select
-      {...props}
-      className={cn(
-        'rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15',
-        className,
-      )}
-    >
-      {children}
-    </select>
+    <>
+      <button
+        ref={button}
+        type="button"
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? `${id}-list` : undefined}
+        aria-label={ariaLabel}
+        onClick={() => (open ? setOpen(false) : openMenu())}
+        onKeyDown={(e) => {
+          if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
+            e.preventDefault();
+            openMenu();
+          }
+        }}
+        className={cn(
+          'inline-flex min-w-0 items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 text-left text-sm text-ink shadow-soft transition-[border-color,box-shadow] hover:border-muted/40 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15 disabled:cursor-not-allowed disabled:opacity-60',
+          open && 'border-brand ring-4 ring-brand/15',
+          className,
+        )}
+      >
+        <span className="truncate">{selected?.label}</span>
+        <ChevronsUpDown className="size-4 shrink-0 text-muted" />
+      </button>
+      {name && <input type="hidden" name={name} value={selected?.value ?? ''} />}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {open && rect && (
+              <motion.ul
+                ref={list}
+                id={`${id}-list`}
+                role="listbox"
+                tabIndex={-1}
+                aria-activedescendant={`${id}-opt-${active}`}
+                onKeyDown={onListKey}
+                initial={{ opacity: 0, y: rect.above ? 6 : -6, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: rect.above ? 4 : -4, scale: 0.98 }}
+                transition={{ duration: 0.14, ease: 'easeOut' }}
+                style={{ position: 'fixed', left: rect.left, top: rect.top, minWidth: rect.width, maxWidth: Math.max(rect.width, 360) }}
+                className="z-[120] max-h-80 overflow-y-auto rounded-xl border border-line bg-surface/95 p-1.5 shadow-lift outline-none backdrop-blur-xl"
+              >
+                {options.map((option, i) => {
+                  const isSelected = option.value === selected?.value;
+                  return (
+                    <li
+                      key={option.value}
+                      id={`${id}-opt-${i}`}
+                      data-index={i}
+                      role="option"
+                      aria-selected={isSelected}
+                      aria-disabled={option.disabled}
+                      onMouseEnter={() => !option.disabled && setActive(i)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => choose(option)}
+                      className={cn(
+                        'flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
+                        i === active ? 'bg-subtle text-ink' : 'text-ink/90',
+                        isSelected && 'font-medium',
+                        option.disabled && 'cursor-not-allowed opacity-50',
+                      )}
+                    >
+                      <span className="min-w-0 flex-1">{option.label}</span>
+                      <Check className={cn('size-4 shrink-0 text-brand', isSelected ? 'opacity-100' : 'opacity-0')} />
+                    </li>
+                  );
+                })}
+              </motion.ul>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
+    </>
   );
 }
 

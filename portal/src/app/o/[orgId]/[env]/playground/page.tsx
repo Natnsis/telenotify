@@ -4,7 +4,7 @@ import { Link2, Send } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { StatusBadge } from '@/components/status-badge';
-import { Alert, Button, Card, CodeBlock, Input, PageHeader } from '@/components/ui';
+import { Alert, Button, Card, CodeBlock, Input, PageHeader, Select } from '@/components/ui';
 import { ConnectQr } from '@/components/qr-code';
 import { VerifyCard } from '@/components/verify-card';
 import { api, ApiError, fetcher } from '@/lib/api';
@@ -122,13 +122,13 @@ export default function PlaygroundPage() {
           <form onSubmit={send} className="space-y-4">
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium text-ink">To</span>
-              <select value={to} onChange={(e) => setTo(e.target.value)} className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15">
+              <Select value={to} onChange={(e) => setTo(e.target.value)} className="w-full">
                 {recipients.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium text-ink">Message</span>
