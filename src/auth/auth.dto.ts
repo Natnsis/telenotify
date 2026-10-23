@@ -1,4 +1,8 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, IsStrongPassword, MaxLength } from 'class-validator';
+
+// Same rules as the portal's password strength meter (portal/src/lib/password.ts).
+const PASSWORD_RULES = { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1 };
+const PASSWORD_MESSAGE = 'Use at least 8 characters with an uppercase letter, a lowercase letter, a number and a special character';
 
 export class SignupDto {
   @IsString()
@@ -11,7 +15,7 @@ export class SignupDto {
   email!: string;
 
   @IsString()
-  @MinLength(8)
+  @IsStrongPassword(PASSWORD_RULES, { message: PASSWORD_MESSAGE })
   @MaxLength(200)
   password!: string;
 }
@@ -42,7 +46,7 @@ export class ResetPasswordDto {
   token!: string;
 
   @IsString()
-  @MinLength(8)
+  @IsStrongPassword(PASSWORD_RULES, { message: PASSWORD_MESSAGE })
   @MaxLength(200)
   password!: string;
 }
@@ -62,7 +66,7 @@ export class ChangePasswordDto {
   currentPassword?: string;
 
   @IsString()
-  @MinLength(8)
+  @IsStrongPassword(PASSWORD_RULES, { message: PASSWORD_MESSAGE })
   @MaxLength(200)
   newPassword!: string;
 }
