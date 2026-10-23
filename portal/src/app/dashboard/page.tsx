@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Spinner } from '@/components/ui';
+import { SplashScreen } from '@/components/splash';
 import { api, ApiError } from '@/lib/api';
 import { takePendingInvite } from '@/lib/invite';
 import type { Me, OrgSummary } from '@/lib/types';
@@ -26,9 +26,5 @@ export default function Home() {
       }
     })();
   }, [router]);
-  return (
-    <div className="grid min-h-screen place-items-center">
-      <Spinner />
-    </div>
-  );
+  return <SplashScreen />;
 }

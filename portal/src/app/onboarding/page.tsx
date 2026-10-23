@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
+import { SplashScreen } from '@/components/splash';
 import { Logo } from '@/components/logo';
-import { Alert, Button, Input, Secret, Spinner } from '@/components/ui';
+import { Alert, Button, Input, Secret } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useRequireUser } from '@/lib/hooks';
 import type { ApiKey } from '@/lib/types';
@@ -27,13 +28,7 @@ export default function OnboardingPage() {
     }
   }
 
-  if (!user) {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <Spinner />
-      </div>
-    );
-  }
+  if (!user) return <SplashScreen messages={['Getting things ready…']} />;
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-12">
