@@ -48,6 +48,8 @@ export default function AccountPage() {
   const password = useAction();
   const removal = useAction();
   const [deleting, setDeleting] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordFormKey, setPasswordFormKey] = useState(0);
   const active = useActiveSection(Boolean(user));
 
   if (!user) return <SplashScreen messages={['Loading your account…']} />;
@@ -188,6 +190,7 @@ export default function AccountPage() {
               description={user.hasPassword ? 'Other devices are signed out when you change it.' : 'Add a password to also sign in with your email.'}
             >
               <form
+                key={passwordFormKey}
                 onSubmit={async (e: FormEvent<HTMLFormElement>) => {
                   e.preventDefault();
                   const form = e.currentTarget;
@@ -200,7 +203,8 @@ export default function AccountPage() {
                     'Password updated. Other devices were signed out.',
                   );
                   if (ok) {
-                    form.reset();
+                    setNewPassword('');
+                    setPasswordFormKey((k) => k + 1);
                     mutate();
                   }
                 }}
@@ -208,8 +212,8 @@ export default function AccountPage() {
               >
                 {user.hasPassword && <PasswordInput name="currentPassword" label="Current password" autoComplete="current-password" required />}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <PasswordInput name="newPassword" label="New password" autoComplete="new-password" minLength={8} required showStrength />
-                  <PasswordInput name="confirm" label="Confirm new password" autoComplete="new-password" minLength={8} required />
+                  <PasswordInput name="newPassword" label="New password" autoComplete="new-password" minLength={8} required showStrength onChange={(e) => setNewPassword(e.target.value)} />
+                  <PasswordInput name="confirm" label="Confirm new password" autoComplete="new-password" minLength={8} required matchWith={newPassword} />
                 </div>
                 <Feedback error={password.error} done={password.done} />
                 <div className="flex justify-end">

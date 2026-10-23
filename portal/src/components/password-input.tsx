@@ -20,10 +20,17 @@ export function PasswordInput({
   label,
   hint,
   showStrength,
+  matchWith,
   className,
   onChange,
   ...props
-}: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { label?: string; hint?: ReactNode; showStrength?: boolean }) {
+}: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
+  label?: string;
+  hint?: ReactNode;
+  showStrength?: boolean;
+  /** For a "confirm password" field: the password it must equal. */
+  matchWith?: string;
+}) {
   const [visible, setVisible] = useState(false);
   const [value, setValue] = useState(typeof props.defaultValue === 'string' ? props.defaultValue : '');
   const current = typeof props.value === 'string' ? props.value : value;
@@ -67,8 +74,20 @@ export function PasswordInput({
             </AnimatePresence>
           </button>
         </span>
-        {hint && !showStrength && <span className="mt-1.5 block text-xs text-muted">{hint}</span>}
+        {hint && !showStrength && matchWith === undefined && <span className="mt-1.5 block text-xs text-muted">{hint}</span>}
       </label>
+
+      {matchWith !== undefined && current.length > 0 && (
+        <p
+          className={cn(
+            'mt-1.5 flex items-center gap-1.5 text-xs font-medium',
+            current === matchWith ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400',
+          )}
+        >
+          {current === matchWith ? <Check className="size-3.5" strokeWidth={3} /> : <X className="size-3.5" strokeWidth={3} />}
+          {current === matchWith ? 'Passwords match' : 'Passwords don’t match yet'}
+        </p>
+      )}
 
       {showStrength && (
         <div className="mt-2.5">

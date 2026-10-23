@@ -12,6 +12,7 @@ function ResetForm() {
   const token = useSearchParams().get('token');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,8 +35,8 @@ function ResetForm() {
       <h1 className="mb-5 font-display text-2xl font-bold tracking-tight text-ink">Choose a new password</h1>
       <form onSubmit={onSubmit} className="space-y-4">
         {error && <Alert>{error}</Alert>}
-        <PasswordInput label="New password" name="password" autoComplete="new-password" minLength={8} required showStrength />
-        <PasswordInput label="Confirm password" name="confirm" autoComplete="new-password" minLength={8} required />
+        <PasswordInput label="New password" name="password" autoComplete="new-password" minLength={8} required showStrength onChange={(e) => setPassword(e.target.value)} />
+        <PasswordInput label="Confirm password" name="confirm" autoComplete="new-password" minLength={8} required matchWith={password} />
         <Button type="submit" loading={loading} className="w-full">
           Update password
         </Button>
