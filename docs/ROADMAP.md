@@ -28,6 +28,16 @@ Agreed order (2026-10-22). Tick items as they ship; keep this file current.
 ## Batch 4b: Look and feel ✅ (done 2026-10-22)
 - [x] Theme switcher: light / dark / follow system, for the portal and landing page (remembered per user)
 
+## Batch 4c: Portal polish ✅ (done 2026-10-23)
+- [x] Modern animated loading screen (after login and while the workspace loads)
+- [x] Password fields: show/hide eye icon, strength meter and rules (uppercase, number, special character), enforced by the API too
+- [x] Redesign the Account settings page
+- [x] Clickable breadcrumb
+- [x] Docs: code samples in many languages (cURL, Node.js, Python, Go, PHP, Java)
+- [x] API reference: more attractive and interactive
+- [x] Replace native select dropdowns with a custom, themed picker
+- [x] Top progress bar when navigating between pages
+
 ## Proposed: payment-gateway readiness (from the 2026-10-22 scenario, not yet agreed)
 - [x] Per-bot send rate limits and a priority lane so OTP/transaction messages jump ahead of bulk sends
 - [x] Message templates with Amharic/English variants
