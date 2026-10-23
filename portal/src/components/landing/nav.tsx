@@ -15,6 +15,7 @@ const links = [
   { href: '#verify', label: 'Verify phones' },
   { href: '#savings', label: 'Savings' },
   { href: '#developers', label: 'Developers' },
+  { href: '#sdk', label: 'SDK' },
   { href: '#pricing', label: 'Pricing' },
   { href: '#faq', label: 'FAQ' },
 ];

@@ -7,6 +7,7 @@ import { HowItWorks } from '@/components/landing/how-it-works';
 import { LandingNav } from '@/components/landing/nav';
 import { Pricing } from '@/components/landing/pricing';
 import { Savings } from '@/components/landing/savings';
+import { Sdk } from '@/components/landing/sdk';
 import { UseCases } from '@/components/landing/use-cases';
 import { VerifySection } from '@/components/landing/verify-section';
 
@@ -23,6 +24,7 @@ export default function LandingPage() {
         <Features />
         <HowItWorks />
         <Developers />
+        <Sdk />
         <Pricing />
         <Faq />
         <FinalCta />
