@@ -61,7 +61,8 @@ export class AuthService {
   async sendVerification(user: User): Promise<void> {
     if (user.emailVerifiedAt) return;
     const token = await this.issueToken(user.id, 'EMAIL_VERIFY', VERIFY_HOURS);
-    await this.mail.send(
+    // Sign-up shouldn't wait for (or fail on) SMTP; MailService logs a failed send.
+    void this.mail.send(
       user.email,
       'Verify your Telenotify email',
       `Hi ${user.name},\n\nConfirm your email to start using Telenotify:\n${this.portalUrl()}/verify-email?token=${token}\n\nThis link expires in ${VERIFY_HOURS} hours.`,
@@ -78,7 +79,9 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
     if (!user) return;
     const token = await this.issueToken(user.id, 'PASSWORD_RESET', RESET_HOURS);
-    await this.mail.send(
+    // Don't wait for SMTP: the response stays fast and takes the same time whether
+    // or not the account exists. MailService logs a failed send.
+    void this.mail.send(
       user.email,
       'Reset your Telenotify password',
       `Hi ${user.name},\n\nReset your password here:\n${this.portalUrl()}/reset-password?token=${token}\n\nThis link expires in ${RESET_HOURS} hour. If you didn't ask for this, ignore this email.`,
