@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { ButtonHTMLAttributes, Children, InputHTMLAttributes, isValidElement, ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { highlight } from '@/lib/highlight';
 
 export { cn } from '@/lib/cn';
 import { cn } from '@/lib/cn';
@@ -365,10 +366,20 @@ export function CodeBlock({ code, language }: { code: string; language?: string 
         <CopyButton value={code} dark />
       </div>
       <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed text-slate-200">
-        <code>{code}</code>
+        <code>{highlight(code, codeLanguage(language, code))}</code>
       </pre>
     </div>
   );
+}
+
+// The label may be a language ("bash") or a caption ("send it"); fall back to sniffing the code.
+function codeLanguage(label: string | undefined, code: string) {
+  const known = ['bash', 'json', 'javascript', 'python', 'go', 'php', 'java'];
+  if (label && known.includes(label)) return label;
+  if (label === 'typescript' || label === 'js' || label === 'ts') return 'javascript';
+  if (code.trimStart().startsWith('curl') || code.trimStart().startsWith('#')) return 'bash';
+  if (/^\s*[{\[]/.test(code)) return 'json';
+  return 'javascript';
 }
 
 export function PageHeader({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) {
