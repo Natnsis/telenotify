@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { cn } from '@/components/ui';
 import { API_BASE_URL } from '@/lib/api';
+import { highlight } from '@/lib/highlight';
 import { Reveal, SectionHeading } from './reveal';
 
 const samples = {
@@ -101,7 +102,7 @@ export function Developers() {
                 transition={{ duration: 0.2 }}
                 className="h-[400px] overflow-auto p-5 font-mono text-[13px] leading-relaxed text-slate-200"
               >
-                <code>{sample(lang)}</code>
+                <code>{highlight(sample(lang), lang === 'Python' ? 'python' : lang === 'cURL' ? 'bash' : 'javascript')}</code>
               </motion.pre>
             </AnimatePresence>
           </Reveal>
