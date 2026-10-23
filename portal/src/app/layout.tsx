@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Bricolage_Grotesque, Geist, Geist_Mono } from 'next/font/google';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from '@/lib/site';
 import { themeInitScript } from '@/lib/theme';
 import './globals.css';
 import { RouteProgress } from '@/components/route-progress';
@@ -9,9 +10,14 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin']
 const display = Bricolage_Grotesque({ variable: '--font-display', subsets: ['latin'], weight: ['500', '600', '700', '800'] });
 
 export const metadata: Metadata = {
-  title: 'Telenotify: customer notifications on Telegram, with one API call',
-  description:
-    'Send order updates, OTPs and receipts on Telegram from your own branded bot. One API call, a free sandbox, and an instant signal when you should fall back to SMS.',
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_TITLE, template: `%s · ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: ['Telegram notifications', 'Telegram API', 'SMS alternative', 'OTP', 'phone verification', 'Ethiopia', 'Amharic', 'Telegram bot API', 'transactional notifications'],
+  openGraph: { type: 'website', siteName: SITE_NAME, url: SITE_URL, title: SITE_TITLE, description: SITE_DESCRIPTION, locale: 'en_US' },
+  twitter: { card: 'summary_large_image', title: SITE_TITLE, description: SITE_DESCRIPTION },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
