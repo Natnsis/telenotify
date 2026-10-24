@@ -1,0 +1,37 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please leave out API keys, bot tokens and customers' personal data.
+        Found a security problem? Don't file it here: see SECURITY.md.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options: [API, Developer portal, Node.js SDK, Self-hosting / deployment, Docs, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The request and response, or the portal steps.
+      placeholder: |
+        1. POST /v1/messages with { "to": "...", "text": "..." }
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Hosted or self-hosted, sandbox or live, SDK version if relevant.
