@@ -21,7 +21,11 @@ export type AuditAction =
   | 'template.created'
   | 'template.updated'
   | 'template.deleted'
-  | 'sms_fallback.updated';
+  | 'sms_fallback.updated'
+  | 'org.suspended'
+  | 'org.unsuspended'
+  | 'live.approved'
+  | 'live.review_requested';
 
 export type Actor = Pick<User, 'id' | 'email'> | null;
 

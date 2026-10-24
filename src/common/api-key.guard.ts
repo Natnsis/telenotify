@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { sha256 } from './crypto';
 
@@ -20,10 +20,17 @@ export class ApiKeyGuard implements CanActivate {
     if (!key || key.revokedAt) {
       throw new UnauthorizedException('Invalid API key');
     }
+    if (key.environment.org.status === 'SUSPENDED') {
+      throw new ForbiddenException({ statusCode: 403, code: 'org_suspended', message: suspendedMessage(key.environment.org.suspendedReason) });
+    }
     request.environment = key.environment;
     request.apiKeyId = key.id;
     // Best effort; not worth failing the request over.
     this.prisma.apiKey.update({ where: { id: key.id }, data: { lastUsedAt: new Date() } }).catch(() => undefined);
     return true;
   }
+}
+
+export function suspendedMessage(reason: string | null) {
+  return `This organization is suspended${reason ? `: ${reason}` : '.'} Contact Telenotify support if you think this is a mistake.`;
 }

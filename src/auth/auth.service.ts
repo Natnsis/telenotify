@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { User, UserTokenType } from '@prisma/client';
 import { hashPassword, randomToken, sha256, verifyPassword } from '../common/crypto';
 import { AuditService } from '../audit/audit.service';
+import { isOperator } from '../admin/operators';
 import { MailService } from '../mail/mail.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -179,6 +180,7 @@ export class AuthService {
       emailVerified: Boolean(user.emailVerifiedAt),
       hasPassword: Boolean(user.passwordHash),
       googleLinked: Boolean(user.googleSub),
+      isOperator: isOperator(this.config, user.email),
     };
   }
 

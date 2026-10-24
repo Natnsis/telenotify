@@ -63,11 +63,27 @@ enum Plan {
   BUSINESS
 }
 
+enum OrgStatus {
+  ACTIVE
+  // Every API key is rejected; set by an operator or by spam detection.
+  SUSPENDED
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
   // Monthly live quota (messages + verifications); see src/billing/plans.ts.
   plan      Plan     @default(FREE)
+  status          OrgStatus @default(ACTIVE)
+  suspendedAt     DateTime?
+  suspendedReason String?
+  // Until an operator approves live use, live sending is capped per day
+  // (UNAPPROVED_LIVE_DAILY_LIMIT) so a new account can test but not spam.
+  liveApprovedAt     DateTime?
+  liveReviewRequestedAt DateTime?
+  // What the organization told us when asking for review.
+  liveUseCase String?
+  website     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

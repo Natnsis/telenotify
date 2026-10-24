@@ -1,6 +1,7 @@
 import { Body, Controller, Headers, HttpCode, Logger, NotFoundException, Param, Post, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiExcludeController } from '@nestjs/swagger';
+import { AdminService } from '../admin/admin.service';
 import { safeEqual } from '../common/crypto';
 import { ChatScope, CustomersService } from '../customers/customers.service';
 import { MessagesService } from '../messages/messages.service';
@@ -35,6 +36,7 @@ export class TelegramWebhookController {
     private readonly verifications: VerificationsService,
     private readonly webhooks: WebhooksService,
     private readonly config: ConfigService,
+    private readonly admin: AdminService,
   ) {}
 
   @Post('sandbox')
@@ -85,6 +87,7 @@ export class TelegramWebhookController {
     if (blocked) {
       for (const customer of customers) {
         await this.webhooks.emit(customer.environment, 'customer.blocked', { externalId: customer.externalId });
+        await this.admin.onCustomerBlocked(customer.environment.id);
       }
     }
   }

@@ -16,6 +16,8 @@ import { WebhooksService } from '../webhooks/webhooks.service';
 import { VerificationsService } from '../verifications/verifications.service';
 import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, CustomerMessageDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, TestSmsDto, UpdateEnvironmentDto, UpdateSmsFallbackDto } from './portal.dto';
 import { PortalService } from './portal.service';
+import { AdminService } from '../admin/admin.service';
+import { LiveReviewDto } from '../admin/admin.dto';
 import { SmsFallbackService } from '../sms-fallback/sms-fallback.service';
 
 @ApiExcludeController()
@@ -32,6 +34,7 @@ export class PortalController {
     private readonly audit: AuditService,
     private readonly requestLog: RequestLogService,
     private readonly smsFallback: SmsFallbackService,
+    private readonly admin: AdminService,
   ) {}
 
   @Post()
@@ -47,6 +50,14 @@ export class PortalController {
   @Get(':orgId')
   getOrg(@Req() req: Request & { membership: { org: Organization; role: string } }) {
     return this.portal.getOrg(req.membership.org, req.membership.role);
+  }
+
+  // Asks the operators to approve live sending (new orgs are capped per day until then).
+  @Post(':orgId/live-review')
+  @HttpCode(200)
+  async requestLiveReview(@Req() req: Request & { membership: { org: Organization; role: string } }, @CurrentUser() user: User, @Body() dto: LiveReviewDto) {
+    await this.admin.requestLiveReview(req.membership.org, dto, user);
+    return this.portal.getOrg(await this.portal.reloadOrg(req.membership.org.id), req.membership.role);
   }
 
   @Get(':orgId/audit')

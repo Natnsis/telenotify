@@ -2,7 +2,7 @@ import { HttpException } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { currentPeriod } from './plans';
 
-function setup(plan: string, messages: number, verifications: number) {
+function setup(plan: string, messages: number, verifications: number, org: object = {}) {
   const prisma = {
     environment: { findUnique: jest.fn().mockResolvedValue({ id: 'live-1' }) },
     message: { count: jest.fn().mockResolvedValue(messages) },
@@ -12,8 +12,8 @@ function setup(plan: string, messages: number, verifications: number) {
     membership: { findMany: jest.fn().mockResolvedValue([{ user: { email: 'owner@example.com' } }]) },
   };
   const mail = { send: jest.fn() };
-  const config = { getOrThrow: () => 'http://portal.test' };
-  return { billing: new BillingService(prisma as any, mail as any, config as any), prisma, mail, env: { id: 'live-1', type: 'LIVE', orgId: 'org-1', org: { id: 'org-1', name: 'Mela', plan } } as any };
+  const config = { getOrThrow: () => 'http://portal.test', get: (_key: string, fallback: unknown) => fallback };
+  return { billing: new BillingService(prisma as any, mail as any, config as any), prisma, mail, env: { id: 'live-1', type: 'LIVE', orgId: 'org-1', org: { id: 'org-1', name: 'Mela', plan, status: 'ACTIVE', liveApprovedAt: new Date(), ...org } } as any };
 }
 
 describe('BillingService', () => {
@@ -72,6 +72,27 @@ describe('BillingService', () => {
       const { billing, mail } = setup('FREE', 0, 0);
       await billing.sendUsageAlerts(org, 1000, 1000);
       expect(mail.send.mock.calls.map((c) => c[1])).toEqual([expect.stringContaining('80%'), expect.stringContaining('paused')]);
+    });
+  });
+
+  describe('abuse protection', () => {
+    it('rejects every send from a suspended organization, sandbox included', async () => {
+      const { billing, env } = setup('FREE', 0, 0, { status: 'SUSPENDED', suspendedReason: 'Spam reports' });
+      for (const environment of [env, { ...env, type: 'SANDBOX' }]) {
+        await expect(billing.assertWithinQuota(environment)).rejects.toMatchObject({ response: { code: 'org_suspended', message: expect.stringContaining('Spam reports') } });
+      }
+    });
+
+    it('caps live sends per day until the organization is approved', async () => {
+      const under = setup('FREE', 60, 39, { liveApprovedAt: null });
+      await expect(under.billing.assertWithinQuota(under.env)).resolves.toBeUndefined();
+      const at = setup('FREE', 60, 40, { liveApprovedAt: null });
+      await expect(at.billing.assertWithinQuota(at.env)).rejects.toMatchObject({ response: { code: 'live_review_required' } });
+    });
+
+    it('does not cap the sandbox of an unapproved organization', async () => {
+      const { billing, env } = setup('FREE', 5_000, 0, { liveApprovedAt: null });
+      await expect(billing.assertWithinQuota({ ...env, type: 'SANDBOX' })).resolves.toBeUndefined();
     });
   });
 });

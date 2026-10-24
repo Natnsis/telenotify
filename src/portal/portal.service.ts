@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Environment, EnvironmentType, Organization, User } from '@prisma/client';
+import { AdminService } from '../admin/admin.service';
 import { AuditService } from '../audit/audit.service';
 import { encrypt, randomToken, sha256 } from '../common/crypto';
 import { assertPublicUrl, BlockedAddressError } from '../common/network-guard';
@@ -21,6 +22,7 @@ export class PortalService {
     private readonly webhooks: WebhooksService,
     private readonly config: ConfigService,
     private readonly audit: AuditService,
+    private readonly admin: AdminService,
   ) {}
 
   // ---------- Organizations ----------
@@ -56,6 +58,10 @@ export class PortalService {
     return memberships.map((m) => ({ id: m.org.id, name: m.org.name, role: m.role }));
   }
 
+  reloadOrg(orgId: string) {
+    return this.prisma.organization.findUniqueOrThrow({ where: { id: orgId } });
+  }
+
   async getOrg(org: Organization, role: string) {
     const environments = await this.prisma.environment.findMany({ where: { orgId: org.id } });
     const live = environments.find((e) => e.type === 'LIVE')!;
@@ -66,6 +72,11 @@ export class PortalService {
       plan: org.plan,
       liveBotConnected: Boolean(live.botTokenEncrypted),
       liveBotUsername: live.botUsername,
+      status: org.status.toLowerCase(),
+      suspendedReason: org.suspendedReason,
+      liveApproved: Boolean(org.liveApprovedAt),
+      liveReviewRequestedAt: org.liveReviewRequestedAt,
+      unapprovedDailyLimit: this.admin.unapprovedDailyLimit(),
     };
   }
 
@@ -244,7 +255,7 @@ export class PortalService {
 
   // ---------- Live bot ----------
 
-  async connectBot(environment: Environment, botToken: string, actor: User) {
+  async connectBot(environment: Environment & { org: Organization }, botToken: string, actor: User) {
     if (environment.type !== 'LIVE') throw new BadRequestException('The sandbox uses the shared Telenotify bot');
     if (botToken === this.config.get('SANDBOX_BOT_TOKEN')) throw new BadRequestException('That is the sandbox bot');
     const client = this.telegram.clientForToken(botToken.trim());
@@ -275,6 +286,7 @@ export class PortalService {
       data: { botTokenEncrypted: encrypt(botToken.trim(), this.config.getOrThrow('ENCRYPTION_KEY')), botUsername: bot.username },
     });
     await this.audit.record(environment.orgId, actor, 'bot.connected', `@${bot.username}`);
+    await this.admin.onLiveBotConnected(environment.org, bot.username, actor);
     return this.environmentView(updated);
   }
 

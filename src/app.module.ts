@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { throttlerOptions } from './common/throttling';
+import { AdminModule } from './admin/admin.module';
 import { AuditModule } from './audit/audit.service';
 import { AuthModule } from './auth/auth.module';
 import { BillingModule } from './billing/billing.module';
@@ -36,6 +37,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     MailModule,
     WebhooksModule,
     AuditModule,
+    AdminModule,
     RequestLogModule,
     BillingModule,
     AuthModule,

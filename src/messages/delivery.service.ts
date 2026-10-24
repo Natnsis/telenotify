@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Customer, Environment, Message, Organization } from '@prisma/client';
+import { AdminService } from '../admin/admin.service';
 import { isTestCustomer, TEST_CUSTOMERS } from '../common/sandbox';
 import { PrismaService } from '../prisma/prisma.service';
 import { InlineButton, TelegramApiError } from '../telegram/telegram-api.client';
@@ -21,6 +22,7 @@ export class DeliveryService {
     private readonly telegram: TelegramService,
     private readonly webhooks: WebhooksService,
     private readonly smsFallback: SmsFallbackService,
+    private readonly admin: AdminService,
   ) {}
 
   async deliver(messageId: string, isFinalAttempt: boolean): Promise<void> {
@@ -69,6 +71,7 @@ export class DeliveryService {
       if (error.isBlocked) {
         await this.prisma.customer.update({ where: { id: customer.id }, data: { blockedAt: new Date() } });
         await this.webhooks.emit(environment, 'customer.blocked', { externalId: customer.externalId });
+        await this.admin.onCustomerBlocked(environment.id);
         return this.markUndeliverable(message, 'blocked');
       }
       if (error.isChatGone) {

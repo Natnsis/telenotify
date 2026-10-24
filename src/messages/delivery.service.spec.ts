@@ -24,7 +24,7 @@ function setup(overrides: { customer?: object; environment?: object; message?: o
   const telegram = { clientForEnvironment: jest.fn().mockReturnValue(bot) };
   const webhooks = { emit: jest.fn() };
   const smsFallback = { trigger: jest.fn().mockImplementation((_env, m) => Promise.resolve(m)) };
-  const service = new DeliveryService(prisma as any, telegram as any, webhooks as any, smsFallback as any);
+  const service = new DeliveryService(prisma as any, telegram as any, webhooks as any, smsFallback as any, { onCustomerBlocked: jest.fn() } as any);
   const finalUpdate = () => prisma.message.update.mock.calls.at(-1)![0].data;
   const events = () => webhooks.emit.mock.calls.map((c) => c[1]);
   return { service, prisma, bot, webhooks, smsFallback, finalUpdate, events };
