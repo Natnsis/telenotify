@@ -7,7 +7,7 @@ import { ThemeToggle } from './theme-toggle';
 export const LEGAL = {
   company: process.env.NEXT_PUBLIC_LEGAL_ENTITY || 'Telenotify',
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || process.env.NEXT_PUBLIC_SALES_EMAIL || 'support@telenotify.example',
-  updated: 'October 22, 2026',
+  updated: 'October 24, 2026',
 };
 
 export function LegalPage({ title, intro, children }: { title: string; intro: string; children: ReactNode }) {
@@ -21,7 +21,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro: st
           <nav className="flex items-center gap-4 text-sm text-muted">
             <Link href="/terms" className="hover:text-ink">Terms</Link>
             <Link href="/privacy" className="hover:text-ink">Privacy</Link>
-            <Link href="/refunds" className="hover:text-ink">Refunds</Link>
+
             <ThemeToggle />
           </nav>
         </div>

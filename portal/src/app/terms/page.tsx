@@ -31,8 +31,8 @@ export default function TermsPage() {
         <p>You remain responsible for having a lawful basis to message your customers and for the content you send. We process your customers&apos; data only to provide the service, as described in our <Link href="/privacy" className="text-brand">Privacy Policy</Link>.</p>
       </section>
       <section>
-        <h2>5. Plans, payment and limits</h2>
-        <p>The sandbox is free. Live usage is included up to your plan&apos;s monthly quota; when it&apos;s reached, live messages are rejected until you upgrade or the next month begins. Prices are shown in Ethiopian Birr (ETB) and may change with at least 30 days&apos; notice. Refunds are covered by our <Link href="/refunds" className="text-brand">Refund Policy</Link>.</p>
+        <h2>5. Price and limits</h2>
+        <p>Telenotify is free to use; we don&apos;t take payments. Each organization has a fair-use limit of live messages and verifications per month (currently 10,000); when it&apos;s reached, live messages are rejected until the next month begins. We may raise an organization&apos;s limit on request, and we may change the limit with at least 30 days&apos; notice. The source code is available under the GNU Affero General Public License v3.0, so you can also run Telenotify yourself.</p>
       </section>
       <section>
         <h2>6. Availability and changes</h2>
