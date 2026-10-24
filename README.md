@@ -185,3 +185,5 @@ docker compose --env-file .env.production up -d --build
 Telenotify is free software under the [GNU Affero General Public License v3.0](LICENSE): you can use, modify and self-host it. If you run a modified version as a service for others, you must share your changes under the same license.
 
 The Node.js SDK in [`sdk/node`](sdk/node) is MIT licensed, so it can go into any application.
+
+Need Telenotify under different terms (for example on-premise without the AGPL obligations)? Commercial licenses are available: open an issue or contact the maintainer. Contributors sign a short [CLA](CLA.md) so this stays possible.

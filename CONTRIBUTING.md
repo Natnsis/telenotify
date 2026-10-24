@@ -33,6 +33,12 @@ cd portal && cp .env.example .env.local && npm install && npm run dev   # portal
 - Comments explain *why*, not what the next line does.
 - User-facing text is plain and short; error messages say what to do next.
 
+## Contributor License Agreement (CLA)
+
+Before your first pull request can be merged, you sign our [CLA](CLA.md). It takes one comment: a bot posts the exact text on your pull request, and you reply with it. You only sign once, for all your future contributions.
+
+**Why:** you keep the copyright to your work and Telenotify stays open source (AGPL-3.0). The CLA also lets the project offer Telenotify under other licenses, for example to a bank that can't use AGPL software, which helps keep the project funded.
+
 ## License of contributions
 
-By contributing, you agree that your contribution is licensed under the project's license: AGPL-3.0 for the server and portal, MIT for `sdk/node`.
+Your contributions are published under the project's licenses (AGPL-3.0 for the server and portal, MIT for `sdk/node`) and, as described in the [CLA](CLA.md), may also be licensed under other terms by the project owner.
