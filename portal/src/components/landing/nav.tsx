@@ -16,7 +16,7 @@ const links = [
   { href: '#savings', label: 'Savings' },
   { href: '#developers', label: 'Developers' },
   { href: '#sdk', label: 'SDK' },
-  { href: '#pricing', label: 'Pricing' },
+  { href: '#open-source', label: 'Open source' },
   { href: '#faq', label: 'FAQ' },
 ];
 

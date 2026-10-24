@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
+import { GITHUB_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
 import { Developers } from '@/components/landing/developers';
 import { Ethiopia } from '@/components/landing/ethiopia';
 import { Faq, FinalCta, Footer } from '@/components/landing/closing';
@@ -7,7 +7,7 @@ import { Features } from '@/components/landing/features';
 import { Hero } from '@/components/landing/hero';
 import { HowItWorks } from '@/components/landing/how-it-works';
 import { LandingNav } from '@/components/landing/nav';
-import { Pricing } from '@/components/landing/pricing';
+import { OpenSource } from '@/components/landing/open-source';
 import { Savings } from '@/components/landing/savings';
 import { Sdk } from '@/components/landing/sdk';
 import { UseCases } from '@/components/landing/use-cases';
@@ -24,7 +24,9 @@ const jsonLd = {
   description: SITE_DESCRIPTION,
   applicationCategory: 'DeveloperApplication',
   operatingSystem: 'Web',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ETB', description: 'Free plan: 2,000 messages a month' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ETB', description: 'Free and open source (AGPL-3.0); hosted service with a fair-use limit' },
+  license: 'https://www.gnu.org/licenses/agpl-3.0.html',
+  codeRepository: GITHUB_URL,
 };
 
 export default function LandingPage() {
@@ -42,7 +44,7 @@ export default function LandingPage() {
         <HowItWorks />
         <Developers />
         <Sdk />
-        <Pricing />
+        <OpenSource />
         <Faq />
         <FinalCta />
       </main>

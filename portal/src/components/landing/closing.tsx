@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Logo } from '@/components/logo';
 import { PrimaryLink } from './nav';
 import { Reveal, SectionHeading } from './reveal';
+import { GITHUB_URL } from '@/lib/site';
 
 const faqs = [
   {
@@ -32,6 +33,14 @@ const faqs = [
   {
     q: 'How do I know a webhook really came from Telenotify?',
     a: 'Every event carries an HMAC-SHA256 signature over the timestamp and body using your signing secret, plus a stable event id so retries can be de-duplicated.',
+  },
+  {
+    q: 'Is Telenotify really free?',
+    a: 'Yes. The hosted service is free with a fair-use limit of 10,000 live messages and verifications a month per organization (ask us if you need more), and the code is open source under AGPL-3.0, so you can also run it yourself with no limit.',
+  },
+  {
+    q: 'Can I run Telenotify on my own server?',
+    a: 'Yes. Clone the repository and start it with Docker Compose: the API, portal, Postgres and Redis. Your data, your bot tokens and your limits stay with you.',
   },
   {
     q: 'Is sending on Telegram really free?',
@@ -86,7 +95,7 @@ export function FinalCta() {
           Your next notification could
           <br className="hidden sm:block" /> be on Telegram today.
         </h2>
-        <p className="relative mx-auto mt-5 max-w-xl text-lg text-slate-300">Create an account, grab your sandbox key and send yourself a message in minutes. Free to start, no card required.</p>
+        <p className="relative mx-auto mt-5 max-w-xl text-lg text-slate-300">Create an account, grab your sandbox key and send yourself a message in minutes. Free and open source, no card required.</p>
         <div className="relative mt-9 flex flex-wrap justify-center gap-3">
           <Link
             href="/signup"
@@ -114,12 +123,12 @@ export function Footer() {
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
           <a href="#features" className="hover:text-ink">Features</a>
           <a href="#developers" className="hover:text-ink">Developers</a>
-          <a href="#pricing" className="hover:text-ink">Pricing</a>
+          <a href="#open-source" className="hover:text-ink">Open source</a>
+          <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-ink">GitHub</a>
           <a href="#faq" className="hover:text-ink">FAQ</a>
           <Link href="/login" className="hover:text-ink">Sign in</Link>
           <Link href="/terms" className="hover:text-ink">Terms</Link>
           <Link href="/privacy" className="hover:text-ink">Privacy</Link>
-          <Link href="/refunds" className="hover:text-ink">Refunds</Link>
         </div>
         <p className="text-sm text-muted">© {new Date().getFullYear()} Telenotify</p>
       </div>

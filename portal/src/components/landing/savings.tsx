@@ -2,7 +2,7 @@
 
 import { animate, motion, useInView } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { planFor, SMS_PRICE_ETB } from '@/lib/plans';
+import { SMS_PRICE_ETB } from '@/lib/plans';
 import { Reveal, SectionHeading } from './reveal';
 
 const etb = (value: number) => `${Math.round(value).toLocaleString('en-US')} ETB`;
@@ -76,10 +76,9 @@ export function Savings() {
   const avoided = costToday * (telegramShare / 100);
   // Telenotify volume: each verification counts once (no resends), plus notifications on Telegram.
   const telenotifyVolume = (verifications + notifications) * (telegramShare / 100);
-  const plan = planFor(telenotifyVolume);
-  const planCost = plan.priceEtb ?? 0;
-  const net = avoided - planCost;
-  const costAfter = costToday - avoided + planCost;
+  // Telenotify is free, so the saving is every SMS that moves to Telegram.
+  const net = avoided;
+  const costAfter = costToday - avoided;
 
   return (
     <section id="savings" className="scroll-mt-20 py-24 sm:py-32">
@@ -115,23 +114,21 @@ export function Savings() {
             <div className="pointer-events-none absolute -right-20 -top-20 size-72 rounded-full bg-sky-500/25 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-24 -left-10 size-72 rounded-full bg-indigo-500/25 blur-3xl" />
             <div className="relative">
-              <p className="text-sm text-slate-400">You save each month, after your Telenotify plan</p>
+              <p className="text-sm text-slate-400">You save each month (Telenotify is free)</p>
               <p className="mt-2 font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
                 <AnimatedNumber value={Math.max(0, net)} format={etb} />
               </p>
               <p className="mt-2 text-sm text-slate-300">
-                That&apos;s <span className="font-semibold text-emerald-300">{etb(Math.max(0, net) * 12)}</span> a year on the{' '}
-                <span className="font-semibold text-white">{plan.name}</span> plan
-                {plan.priceEtb === null ? ' (custom pricing, not included)' : plan.priceEtb === 0 ? ' (free)' : ` (${etb(plan.priceEtb)}/month)`}.
+                That&apos;s <span className="font-semibold text-emerald-300">{etb(Math.max(0, net) * 12)}</span> a year, with nothing to pay us.
               </p>
             </div>
 
             <div className="relative space-y-4">
               <Bar label="Today, all SMS" value={costToday} max={costToday} tone="bg-slate-500" />
-              <Bar label="With Telenotify: plan + fallback SMS" value={costAfter} max={costToday} tone="bg-gradient-to-r from-sky-400 to-indigo-400" />
+              <Bar label="With Telenotify: only the fallback SMS" value={costAfter} max={costToday} tone="bg-gradient-to-r from-sky-400 to-indigo-400" />
               <p className="text-xs leading-relaxed text-slate-400">
                 {Math.round(smsPerMonth).toLocaleString('en-US')} SMS/month today → {Math.round(smsPerMonth * (1 - telegramShare / 100)).toLocaleString('en-US')} with Telenotify, plus{' '}
-                {Math.round(telenotifyVolume).toLocaleString('en-US')} Telegram messages & verifications on your plan. Estimate only.
+                {Math.round(telenotifyVolume).toLocaleString('en-US')} Telegram messages & verifications, free. Estimate only.
               </p>
             </div>
           </div>

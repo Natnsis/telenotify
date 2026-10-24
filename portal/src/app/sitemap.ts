@@ -8,7 +8,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ['/login', 0.5],
     ['/terms', 0.3],
     ['/privacy', 0.3],
-    ['/refunds', 0.3],
   ];
   return pages.map(([path, priority]) => ({ url: `${SITE_URL}${path}`, lastModified: new Date(), changeFrequency: 'weekly', priority }));
 }
