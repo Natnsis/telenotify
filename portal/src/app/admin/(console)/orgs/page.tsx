@@ -1,16 +1,12 @@
 'use client';
 
-import { ArrowLeft, Ban, Bot, Building2, CheckCircle2, Globe, Search, ShieldAlert, ShieldCheck, Undo2, UserRound } from 'lucide-react';
+import { Ban, Bot, Building2, CheckCircle2, Globe, Search, ShieldCheck, Undo2, UserRound } from 'lucide-react';
 import { motion } from 'motion/react';
-import Link from 'next/link';
 import { FormEvent, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { Logo } from '@/components/logo';
-import { SplashScreen } from '@/components/splash';
 import { Alert, Badge, Button, Dialog, Empty, Input, Select, Skeleton, timeAgo } from '@/components/ui';
 import { api, ApiError, fetcher } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { useRequireUser } from '@/lib/hooks';
 import { PLANS } from '@/lib/plans';
 import type { AdminOrg } from '@/lib/types';
 
@@ -20,8 +16,7 @@ const n = (v: number) => v.toLocaleString('en-US');
 
 // Operator console: approve live sending, suspend abusive organizations, raise limits.
 export default function AdminPage() {
-  const { user } = useRequireUser();
-  const { data: orgs, mutate, error } = useSWR<AdminOrg[]>(user?.isOperator ? '/admin/orgs' : null, fetcher, { refreshInterval: 30_000 });
+  const { data: orgs, mutate, error } = useSWR<AdminOrg[]>('/admin/orgs', fetcher, { refreshInterval: 30_000 });
   const [filter, setFilter] = useState<Filter>('review');
   const [query, setQuery] = useState('');
   const [suspending, setSuspending] = useState<AdminOrg | null>(null);
@@ -36,17 +31,6 @@ export default function AdminPage() {
       live: list.filter((o) => o.liveBotUsername).length,
     };
   }, [orgs]);
-
-  if (!user) return <SplashScreen messages={['Loading the admin console…']} />;
-  if (!user.isOperator) {
-    return (
-      <div className="grid min-h-screen place-items-center px-4">
-        <Empty title="Operators only" icon={ShieldAlert} action={{ label: 'Back to dashboard', href: '/dashboard' }}>
-          This page is for the people who run this Telenotify server. Add your email to OPERATOR_EMAILS to use it.
-        </Empty>
-      </div>
-    );
-  }
 
   const shown = (orgs ?? [])
     .filter((o) => (filter === 'review' ? needsReview(o) : filter === 'suspended' ? o.status === 'SUSPENDED' : true))
@@ -63,19 +47,8 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-page">
-      <header className="sticky top-0 z-30 border-b border-line/70 bg-page/75 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <Logo suffix="Admin" />
-          </Link>
-          <Link href="/dashboard" className="group inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-subtle hover:text-ink">
-            <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" /> Dashboard
-          </Link>
-        </div>
-      </header>
+    <>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-[1.75rem]">Organizations</h1>
         <p className="mt-1.5 text-sm text-muted">Approve live sending, suspend abuse and raise limits. Every action is written to the organization&apos;s audit log.</p>
 
@@ -146,7 +119,6 @@ export default function AdminPage() {
             ))
           )}
         </div>
-      </main>
 
       <SuspendDialog
         org={suspending}
@@ -157,7 +129,7 @@ export default function AdminPage() {
           await mutate();
         }}
       />
-    </div>
+    </>
   );
 }
 
