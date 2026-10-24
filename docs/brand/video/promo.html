@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Telenotify promo</title>
+<style>
+  @font-face { font-family: 'Geist'; src: url('../../../portal/src/fonts/Geist-Variable.woff2') format('woff2'); font-weight: 100 900; }
+  @font-face { font-family: 'Bricolage'; src: url('../../../portal/src/fonts/BricolageGrotesque-Variable.woff2') format('woff2'); font-weight: 200 800; }
+  @font-face { font-family: 'GeistMono'; src: url('../../../portal/src/fonts/GeistMono-Variable.woff2') format('woff2'); font-weight: 100 900; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1080px; height: 1350px; overflow: hidden; background: #070b14; }
+  body { font-family: 'Geist', -apple-system, sans-serif; color: #e5e9f0; -webkit-font-smoothing: antialiased; }
+  #stage { position: relative; width: 1080px; height: 1350px; overflow: hidden; background: radial-gradient(120% 80% at 50% 0%, #0f1a33 0%, #070b14 60%); }
+  .grid { position: absolute; inset: 0; background-image: linear-gradient(to right, rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%); }
+  .orb { position: absolute; border-radius: 50%; filter: blur(90px); }
+  .scene { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 120px 80px 80px; text-align: center; }
+  h1 { font-family: 'Bricolage', sans-serif; font-weight: 800; font-size: 82px; line-height: 1.02; letter-spacing: -2px; color: #fff; }
+  h2 { font-family: 'Bricolage', sans-serif; font-weight: 800; font-size: 70px; line-height: 1.04; letter-spacing: -1.5px; color: #fff; }
+  .sub { margin-top: 26px; font-size: 34px; line-height: 1.35; color: #a7b0c2; max-width: 880px; }
+  .grad { background: linear-gradient(100deg, #38bdf8 10%, #818cf8 60%, #f472b6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .eyebrow { font-size: 26px; font-weight: 600; letter-spacing: 6px; text-transform: uppercase; color: #38bdf8; }
+
+  /* SMS cards */
+  .sms { width: 860px; display: flex; align-items: center; gap: 22px; padding: 26px 30px; border-radius: 28px; background: #121a2b; border: 1px solid rgba(255,255,255,.08); text-align: left; box-shadow: 0 20px 50px -20px rgba(0,0,0,.6); }
+  .sms .icon { width: 64px; height: 64px; flex: none; border-radius: 18px; display: grid; place-items: center; background: #1f2a40; font-size: 34px; }
+  .sms .body { flex: 1; min-width: 0; }
+  .sms .from { font-size: 22px; color: #8b95a7; }
+  .sms .text { margin-top: 4px; font-size: 29px; color: #e5e9f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sms .cost { flex: none; font-family: 'GeistMono', monospace; font-weight: 700; font-size: 30px; color: #f87171; background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.3); padding: 10px 16px; border-radius: 14px; }
+
+  /* Phone */
+  .phone { position: relative; width: 560px; height: 860px; border-radius: 64px; background: #0b111c; border: 10px solid #1e2636; box-shadow: 0 40px 100px -30px rgba(56,189,248,.35), 0 0 0 2px rgba(255,255,255,.06); overflow: hidden; text-align: left; }
+  .phone .top { display: flex; align-items: center; gap: 16px; padding: 46px 28px 20px; background: #17212b; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .avatar { width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 24px; color: #fff; background: linear-gradient(135deg, #10b981, #0ea5e9); }
+  .phone .name { font-size: 27px; font-weight: 600; color: #fff; }
+  .phone .meta { font-size: 20px; color: #6d7f8f; }
+  .chat { position: absolute; left: 0; right: 0; top: 130px; bottom: 0; padding: 26px 22px; display: flex; flex-direction: column; gap: 16px; background: #0e1621; }
+  .bubble { max-width: 86%; padding: 18px 22px; border-radius: 26px; border-bottom-left-radius: 8px; background: #182533; color: #fff; font-size: 26px; line-height: 1.35; }
+  .bubble.me { align-self: flex-end; border-bottom-left-radius: 26px; border-bottom-right-radius: 8px; background: #2b5278; }
+  .bubble .time { display: block; margin-top: 6px; text-align: right; font-size: 17px; color: #7d8b99; }
+  .btn { margin-top: 10px; padding: 14px; border-radius: 16px; text-align: center; font-size: 24px; color: #6ab3f3; background: rgba(255,255,255,.06); }
+  .kbd { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px; background: #17212b; }
+  .kbd .key { padding: 22px; border-radius: 18px; text-align: center; font-size: 27px; font-weight: 600; color: #fff; background: #2b5278; }
+  .finger { position: absolute; width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,.35); border: 4px solid rgba(255,255,255,.8); box-shadow: 0 0 40px rgba(255,255,255,.5); }
+
+  /* Feature cards */
+  .cards { margin-top: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; width: 920px; }
+  .card { padding: 30px; border-radius: 30px; background: #111a2c; border: 1px solid rgba(255,255,255,.08); text-align: left; }
+  .card .emoji { font-size: 44px; }
+  .card .t { margin-top: 12px; font-size: 31px; font-weight: 700; color: #fff; }
+  .card .d { margin-top: 6px; font-size: 23px; color: #8b95a7; line-height: 1.35; }
+  .code { margin-top: 30px; width: 920px; padding: 26px 30px; border-radius: 24px; background: #0b1020; border: 1px solid rgba(255,255,255,.08); font-family: 'GeistMono', monospace; font-size: 25px; text-align: left; color: #cbd5e1; line-height: 1.5; }
+
+  .pill { display: flex; align-items: center; gap: 16px; padding: 22px 32px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); font-size: 32px; color: #fff; }
+  .pill b { font-family: 'GeistMono', monospace; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="grid"></div>
+  <div class="orb" id="orb1" style="width:700px;height:700px;background:rgba(14,165,233,.28)"></div>
+  <div class="orb" id="orb2" style="width:620px;height:620px;background:rgba(99,102,241,.26)"></div>
+  <div class="orb" id="orb3" style="width:480px;height:480px;background:rgba(244,114,182,.16)"></div>
+
+  <!-- 1. Logo -->
+  <div class="scene" id="s1" style="justify-content:center;padding-top:0">
+    <svg id="mark" viewBox="0 0 32 32" width="260" height="260" style="filter:drop-shadow(0 30px 60px rgba(14,165,233,.45))">
+      <defs><linearGradient id="g" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#0ea5e9"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+      <rect width="32" height="32" rx="9" fill="url(#g)"/>
+      <path id="bubble" fill="#fff" stroke="#fff" stroke-width=".6" d="M11.5 8.5H20.5A5 5 0 0 1 25.5 13.5V17A5 5 0 0 1 20.5 22H14.9L10.6 25.1C10 25.55 9.2 25 9.4 24.3L10.1 21.6A5 5 0 0 1 6.5 17V13.5A5 5 0 0 1 11.5 8.5Z"/>
+      <rect id="tbar" x="11" y="11.6" width="10" height="2.6" rx="1.3" fill="url(#g)" style="transform-box:fill-box;transform-origin:50% 50%"/>
+      <rect id="tstem" x="14.7" y="11.6" width="2.6" height="7.6" rx="1.3" fill="url(#g)" style="transform-box:fill-box;transform-origin:50% 0%"/>
+      <circle id="dot" cx="25" cy="8.5" r="3.6" fill="#f472b6" stroke="url(#g)" stroke-width="2" style="transform-box:fill-box;transform-origin:50% 50%"/>
+    </svg>
+    <h1 id="s1title" style="margin-top:56px;font-size:110px">Telenotify</h1>
+    <p class="sub" id="s1sub" style="font-size:38px">Customer messages on Telegram,<br/>with one API call</p>
+    <p class="sub" id="s1flag" style="margin-top:34px;font-size:30px;color:#cbd5e1">Built in Ethiopia 🇪🇹</p>
+  </div>
+
+  <!-- 2. Problem -->
+  <div class="scene" id="s2">
+    <p class="eyebrow" id="s2eye">The problem</p>
+    <h2 id="s2title" style="margin-top:22px">Every OTP sent by SMS<br/>costs you money.</h2>
+    <div id="s2cards" style="margin-top:64px;display:flex;flex-direction:column;gap:22px">
+      <div class="sms" id="c1"><div class="icon">💬</div><div class="body"><div class="from">SMS · Your app</div><div class="text">Your code is 589869</div></div><div class="cost">−0.20 ETB</div></div>
+      <div class="sms" id="c2"><div class="icon">🔁</div><div class="body"><div class="from">SMS · "Resend code"</div><div class="text">Your new code is 112233</div></div><div class="cost">−0.20 ETB</div></div>
+      <div class="sms" id="c3"><div class="icon">💬</div><div class="body"><div class="from">SMS · in Amharic, 3 parts</div><div class="text">የእርስዎ የማረጋገጫ ኮድ 589869 ነው። ለማንም አያጋሩ…</div></div><div class="cost">−0.60 ETB</div></div>
+      <div class="sms" id="c4"><div class="icon">📦</div><div class="body"><div class="from">SMS · Order update</div><div class="text">Order #1042 is out for delivery</div></div><div class="cost">−0.20 ETB</div></div>
+    </div>
+    <p class="sub" id="s2foot" style="margin-top:50px">…for every customer, every day.</p>
+  </div>
+
+  <!-- 3. Telegram chat -->
+  <div class="scene" id="s3">
+    <p class="eyebrow" id="s3eye">The answer</p>
+    <h2 id="s3title" style="margin-top:22px">Send it on Telegram.<br/><span class="grad">Your customers are there.</span></h2>
+    <div class="phone" id="phone3" style="margin-top:56px">
+      <div class="top"><div class="avatar">AP</div><div><div class="name">Abebe Pharmacy ✓</div><div class="meta">bot</div></div></div>
+      <div class="chat">
+        <div class="bubble" id="m1">✅ ከAbebe 1,250 ብር ተቀብለዋል። ማጣቀሻ TX-88።<span class="time">9:41</span></div>
+        <div class="bubble" id="m2">Your order #1042 is out for delivery 🚚<span class="time">9:42</span><div class="btn">Track order ↗</div></div>
+        <div class="bubble" id="m3">Your prescription is ready for pickup today. 💊<span class="time">9:44</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Verify -->
+  <div class="scene" id="s4">
+    <p class="eyebrow" id="s4eye">Verify with Telegram</p>
+    <h2 id="s4title" style="margin-top:22px">Verify phone numbers.<br/><span class="grad">No OTP. No SMS.</span></h2>
+    <div class="phone" id="phone4" style="margin-top:56px">
+      <div class="top"><div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">ML</div><div><div class="name">Mela Loans ✓</div><div class="meta">bot</div></div></div>
+      <div class="chat">
+        <div class="bubble" id="v1">Mela Loans wants to confirm your phone number. Tap the button below.<span class="time">10:02</span></div>
+        <div class="bubble me" id="v2">📞 +251 9•• ••• •44<span class="time">10:02</span></div>
+        <div class="bubble" id="v3">✅ Your phone number is verified. You can go back to Mela Loans now.<span class="time">10:02</span></div>
+      </div>
+      <div class="kbd" id="kbd"><div class="key" id="key">📱 Share my phone number</div></div>
+      <div class="finger" id="finger"></div>
+    </div>
+  </div>
+
+  <!-- 5. Developers -->
+  <div class="scene" id="s5">
+    <p class="eyebrow" id="s5eye">For developers</p>
+    <h2 id="s5title" style="margin-top:22px">One API call.<br/><span class="grad">Everything else is handled.</span></h2>
+    <div class="cards">
+      <div class="card" id="f1"><div class="emoji">🇪🇹</div><div class="t">Amharic templates</div><div class="d">Also Afaan Oromo, Tigrinya and English</div></div>
+      <div class="card" id="f2"><div class="emoji">↩️</div><div class="t">Honest fallback</div><div class="d">Know instantly when to send SMS instead</div></div>
+      <div class="card" id="f3"><div class="emoji">🧪</div><div class="t">Free sandbox</div><div class="d">Test customers for every outcome</div></div>
+      <div class="card" id="f4"><div class="emoji">🔔</div><div class="t">Signed webhooks</div><div class="d">Delivery results pushed to your server</div></div>
+    </div>
+    <div class="code" id="code"><span style="color:#f472b6">await</span> telenotify.messages.<span style="color:#7dd3fc">send</span>({<br/>&nbsp;&nbsp;to: <span style="color:#86efac">'customer_123'</span>,<br/>&nbsp;&nbsp;template: <span style="color:#86efac">'payment_received'</span>,<br/>});</div>
+  </div>
+
+  <!-- 6. Free & open source -->
+  <div class="scene" id="s6" style="justify-content:center;padding-top:0">
+    <svg viewBox="0 0 32 32" width="120" height="120" id="mark6">
+      <rect width="32" height="32" rx="9" fill="url(#g)"/>
+      <path fill="#fff" d="M11.5 8.5H20.5A5 5 0 0 1 25.5 13.5V17A5 5 0 0 1 20.5 22H14.9L10.6 25.1C10 25.55 9.2 25 9.4 24.3L10.1 21.6A5 5 0 0 1 6.5 17V13.5A5 5 0 0 1 11.5 8.5Z"/>
+      <rect x="11" y="11.6" width="10" height="2.6" rx="1.3" fill="url(#g)"/><rect x="14.7" y="11.6" width="2.6" height="7.6" rx="1.3" fill="url(#g)"/>
+      <circle cx="25" cy="8.5" r="3.6" fill="#f472b6" stroke="url(#g)" stroke-width="2"/>
+    </svg>
+    <h1 id="s6title" style="margin-top:44px;font-size:130px"><span class="grad">Free.</span><br/>Open source.</h1>
+    <p class="sub" id="s6sub">10,000 messages a month, free.<br/>Or run it on your own server, no limits.</p>
+    <div id="s6links" style="margin-top:60px;display:flex;flex-direction:column;align-items:center;gap:20px">
+      <div class="pill" id="l1">🌐 <b>telenotify.duckdns.org</b></div>
+      <div class="pill" id="l2">⭐ <b>github.com/sami-yesha/telenotify</b></div>
+      <div class="pill" id="l3">📦 <b>npm i @telenotify/node</b></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Every frame is a pure function of time, so capture is exact and repeatable.
+  const DURATION = 32;
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v) => Math.max(0, Math.min(1, v));
+  const p = (t, a, b) => clamp((t - a) / (b - a));
+  const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+  const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const back = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+
+  // Fade a scene in at `a`, out at `b`.
+  function scene(el, t, a, b) {
+    const vin = easeOut(p(t, a, a + 0.5));
+    const vout = 1 - p(t, b - 0.45, b);
+    const v = Math.min(vin, vout);
+    el.style.opacity = v;
+    el.style.visibility = v <= 0 ? 'hidden' : 'visible';
+    el.style.transform = `scale(${0.97 + 0.03 * vin}) translateY(${(1 - vout) * -30}px)`;
+  }
+  // Rise and fade in an element at `a`.
+  function rise(el, t, a, d = 0.55, dist = 40) {
+    const x = easeOut(p(t, a, a + d));
+    el.style.opacity = x;
+    el.style.transform = `translateY(${(1 - x) * dist}px)`;
+  }
+  function pop(el, t, a, d = 0.5) {
+    const x = p(t, a, a + d);
+    el.style.opacity = clamp(x * 2);
+    el.style.transform = `scale(${0.6 + 0.4 * back(x)})`;
+  }
+
+  window.render = function (t) {
+    // Drifting background glow.
+    $('orb1').style.transform = `translate(${-150 + Math.sin(t * 0.35) * 120}px, ${-180 + Math.cos(t * 0.3) * 80}px)`;
+    $('orb2').style.transform = `translate(${600 + Math.cos(t * 0.28) * 110}px, ${700 + Math.sin(t * 0.33) * 90}px)`;
+    $('orb3').style.transform = `translate(${300 + Math.sin(t * 0.5) * 160}px, ${300 + Math.cos(t * 0.4) * 140}px)`;
+
+    // 1. Logo assembles (0–4.2)
+    scene($('s1'), t, 0, 4.2);
+    const m = back(p(t, 0.1, 0.9));
+    $('mark').style.transform = `scale(${0.4 + 0.6 * m}) rotate(${(1 - clamp(m)) * -12}deg)`;
+    $('mark').style.opacity = clamp(p(t, 0.1, 0.5));
+    const b = p(t, 0.4, 1.1);
+    $('bubble').style.strokeDasharray = 120; $('bubble').style.strokeDashoffset = 120 * (1 - b);
+    $('bubble').style.fillOpacity = p(t, 0.9, 1.2);
+    $('tbar').style.transform = `scaleX(${easeOut(p(t, 1.1, 1.4))})`;
+    $('tstem').style.transform = `scaleY(${easeOut(p(t, 1.25, 1.55))})`;
+    $('dot').style.transform = `scale(${back(p(t, 1.45, 1.9))})`;
+    rise($('s1title'), t, 1.4);
+    rise($('s1sub'), t, 1.8);
+    rise($('s1flag'), t, 2.2);
+
+    // 2. Problem (4.0–10.4)
+    scene($('s2'), t, 4.0, 10.4);
+    rise($('s2eye'), t, 4.2); rise($('s2title'), t, 4.4);
+    ['c1', 'c2', 'c3', 'c4'].forEach((id, i) => {
+      const x = easeOut(p(t, 5.3 + i * 0.75, 5.85 + i * 0.75));
+      $(id).style.opacity = x;
+      $(id).style.transform = `translateX(${(1 - x) * (i % 2 ? 120 : -120)}px)`;
+      const cost = $(id).querySelector('.cost');
+      const flash = Math.max(0, 1 - Math.abs(t - (5.75 + i * 0.75)) * 3);
+      cost.style.transform = `scale(${1 + flash * 0.18})`;
+    });
+    rise($('s2foot'), t, 8.6);
+
+    // 3. Telegram chat (10.2–17.2)
+    scene($('s3'), t, 10.2, 17.2);
+    rise($('s3eye'), t, 10.4); rise($('s3title'), t, 10.6);
+    rise($('phone3'), t, 11.0, 0.8, 120);
+    rise($('m1'), t, 12.2, 0.45, 30);
+    rise($('m2'), t, 13.6, 0.45, 30);
+    rise($('m3'), t, 15.0, 0.45, 30);
+
+    // 4. Verify (17.0–23.4)
+    scene($('s4'), t, 17.0, 23.4);
+    rise($('s4eye'), t, 17.2); rise($('s4title'), t, 17.4);
+    rise($('phone4'), t, 17.8, 0.8, 120);
+    rise($('v1'), t, 18.8, 0.45, 30);
+    // The finger moves to the button, taps, and the contact is shared.
+    const fx = easeInOut(p(t, 19.4, 20.3));
+    const finger = $('finger');
+    finger.style.left = `${380 - 145 * fx}px`;
+    finger.style.top = `${880 - 140 * fx}px`;
+    const tap = Math.max(0, 1 - Math.abs(t - 20.5) * 5);
+    finger.style.opacity = clamp(p(t, 19.3, 19.6)) * (1 - p(t, 20.8, 21.1));
+    finger.style.transform = `scale(${1 - tap * 0.25})`;
+    $('key').style.filter = `brightness(${1 + tap * 0.5})`;
+    $('kbd').style.opacity = 1 - p(t, 20.7, 21.0);
+    rise($('v2'), t, 20.8, 0.4, 30);
+    rise($('v3'), t, 21.6, 0.45, 30);
+
+    // 5. Developers (23.2–28.0)
+    scene($('s5'), t, 23.2, 28.0);
+    rise($('s5eye'), t, 23.4); rise($('s5title'), t, 23.6);
+    ['f1', 'f2', 'f3', 'f4'].forEach((id, i) => pop($(id), t, 24.2 + i * 0.25));
+    rise($('code'), t, 25.6);
+
+    // 6. Free & open source (27.8–32)
+    scene($('s6'), t, 27.8, 99);
+    pop($('mark6'), t, 28.0, 0.6);
+    rise($('s6title'), t, 28.3);
+    rise($('s6sub'), t, 28.8);
+    ['l1', 'l2', 'l3'].forEach((id, i) => rise($(id), t, 29.3 + i * 0.25, 0.5, 30));
+  };
+  window.DURATION = DURATION;
+  render(0);
+</script>
+</body>
+</html>

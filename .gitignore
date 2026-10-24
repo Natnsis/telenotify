@@ -8,3 +8,6 @@ bin/
 # Backups (deploy/backup)
 deploy/backup/backup.env
 backups/
+
+# Generated promo video (rebuild from docs/brand/video)
+docs/brand/video/*.mp4
