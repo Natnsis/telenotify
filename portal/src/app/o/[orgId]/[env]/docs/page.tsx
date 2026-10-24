@@ -6,6 +6,7 @@ import { CodeTabs } from '@/components/code-tabs';
 import { Card, CodeBlock, PageHeader } from '@/components/ui';
 import { API_BASE_URL } from '@/lib/api';
 import { useOrgParams } from '@/lib/hooks';
+import { SITE_URL } from '@/lib/site';
 import { snippets, toJs } from '@/lib/snippets';
 
 const testCustomers = [
@@ -187,7 +188,28 @@ export default function DocsPage() {
         <div id="verify">
           <Section n={6} title="Verify a phone number without SMS">
             <p>
-              Replace SMS one-time codes. Create a verification, send the person to its link (a “Verify with Telegram” button), and they share their number with your bot in one tap. Telegram vouches the number belongs to that account, so there&apos;s no code to type and no resend.
+              Replace SMS one-time codes. The person shares their number with your bot in one tap, and Telegram vouches it belongs to that account, so there&apos;s no code to type and no resend.
+            </p>
+            <div className="rounded-xl border border-brand/30 bg-brand/5 p-4">
+              <p className="font-semibold text-ink">Easiest: the Verify widget (one line, no backend to start it)</p>
+              <p className="mt-1">
+                Add our button to your page with your publishable key. Your page gets a <code className="font-mono text-ink">verified</code> event with the phone and a signed token; check the
+                token on your server with <code className="font-mono text-ink">verifications.verifyToken(token, signingSecret)</code>. Keys, allowed websites and a live demo are on the{' '}
+                <Link href={`/o/${orgId}/${env}/verify-widget`} className="font-medium text-brand hover:underline">
+                  Verify widget
+                </Link>{' '}
+                page.
+              </p>
+              <div className="mt-3">
+                <CodeBlock
+                  language="html"
+                  code={`<script src="${SITE_URL}/verify.js" defer></script>\n<telenotify-verify key="tn_pk_${env === 'sandbox' ? 'test' : 'live'}_…"></telenotify-verify>`}
+                />
+              </div>
+            </div>
+            <p className="font-semibold text-ink">Or with the API</p>
+            <p>
+              Create a verification and send the person to its <code className="font-mono text-ink">hostedUrl</code> (pass <code className="font-mono text-ink">returnUrl</code> to come back to your app), or straight to the t.me <code className="font-mono text-ink">url</code>.
             </p>
             <CodeTabs
               title="POST /v1/verifications"

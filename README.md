@@ -27,7 +27,7 @@
 Businesses send order updates, OTPs, payment alerts and receipts through **their own branded Telegram bot**, from one REST call. Telegram doesn't charge per message, so it's a much cheaper first channel than SMS for customers who use it.
 
 - **Notifications:** plain text or templates in English, Amharic, Afaan Oromo and Tigrinya, with URL buttons, idempotency and a priority lane for OTPs.
-- **Phone verification without SMS:** "Verify with Telegram": the customer shares their number with your bot in one tap, and Telegram vouches for it.
+- **Phone verification without SMS:** "Verify with Telegram": the customer shares their number with your bot in one tap, and Telegram vouches for it. Add it to any website with **one line** (the Verify widget): a hosted verify page, a signed result, no backend endpoint to start it.
 - **An honest fallback signal:** when a customer can't be reached on Telegram, the API says so immediately (`UNDELIVERABLE` + reason), so your SMS or email provider takes over. It can also send that SMS for you through your own AfroMessage account.
 - **Developer portal:** sandbox with test customers, API keys, signed webhooks with retries and a delivery log, request log, analytics, team, audit log, and an interactive API reference with code in six languages.
 
@@ -81,6 +81,15 @@ Every customer, message, key and webhook setting belongs to one environment.
 Templates are managed in the portal (per organization, shared by sandbox and live) with `en`, `am`, `om` and `ti` variants and `{{placeholder}}` values. The language is the `locale` sent, else the customer's locale, else the template default; missing params return 400.
 
 **SMS fallback (bring your own AfroMessage).** Optional, per environment, set on the portal's SMS fallback page. When a message ends `UNDELIVERABLE` or `FAILED` and the customer has a phone, the same text (buttons written as `label: link` lines) is sent through the organization's own AfroMessage account; the token is stored encrypted and the organization pays AfroMessage directly. Messages carry `fallback: { channel: "sms", status: queued | sent | failed | skipped, error, at }`; `"fallback": false` on a send opts that message out. The sandbox simulates it without credentials.
+
+### Verify widget (one-line phone verification)
+
+```html
+<script src="https://<portal>/verify.js" defer></script>
+<telenotify-verify key="tn_pk_live_…"></telenotify-verify>
+```
+
+The button opens the hosted page `/verify/<id>` in a popup; when the person verifies in Telegram, the page receives a `verified` event with `{ id, phone, token }`. The token is HMAC-signed with the environment's signing secret and valid for 10 minutes; check it server-side with `verifyToken()` from `@telenotify/node`. Publishable keys (`tn_pk_…`) can only start verifications and, in live, only from the allowed websites set in the portal; a browser can't pass `externalId`. Server-side alternative: `POST /v1/verifications` with `returnUrl` and redirect to the returned `hostedUrl`.
 
 Message results:
 
