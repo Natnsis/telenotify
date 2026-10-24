@@ -66,7 +66,7 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.4 }}
             className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted"
           >
-            {['Free & open source', 'No SMS cost per message', 'Phone verification without OTP'].map((item) => (
+            {['Free & open source', 'No SMS cost per message', 'One-line phone verification'].map((item) => (
               <li key={item} className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-4 text-emerald-500" /> {item}
               </li>

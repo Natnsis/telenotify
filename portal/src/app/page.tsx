@@ -7,6 +7,7 @@ import { Features } from '@/components/landing/features';
 import { Hero } from '@/components/landing/hero';
 import { HowItWorks } from '@/components/landing/how-it-works';
 import { LandingNav } from '@/components/landing/nav';
+import { OneLineVerify } from '@/components/landing/one-line-verify';
 import { OpenSource } from '@/components/landing/open-source';
 import { Savings } from '@/components/landing/savings';
 import { Sdk } from '@/components/landing/sdk';
@@ -39,6 +40,7 @@ export default function LandingPage() {
         <UseCases />
         <Ethiopia />
         <VerifySection />
+        <OneLineVerify />
         <Savings />
         <Features />
         <HowItWorks />

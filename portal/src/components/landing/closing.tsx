@@ -35,6 +35,10 @@ const faqs = [
     a: 'Every event carries an HMAC-SHA256 signature over the timestamp and body using your signing secret, plus a stable event id so retries can be de-duplicated.',
   },
   {
+    q: 'How fast can I add phone verification to my website?',
+    a: 'Minutes. Add our script and the <telenotify-verify> button with your publishable key. Your users tap it, confirm in Telegram, and your page gets the verified number plus a signed token you check on your server. No OTP form and no backend endpoint to start the flow.',
+  },
+  {
     q: 'Is Telenotify really free?',
     a: 'Yes. The hosted service is free with a fair-use limit of 10,000 live messages and verifications a month per organization (ask us if you need more), and the code is open source under AGPL-3.0, so you can also run it yourself with no limit.',
   },
