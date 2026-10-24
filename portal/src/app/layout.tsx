@@ -1,13 +1,15 @@
 import type { Metadata } from 'next';
-import { Bricolage_Grotesque, Geist, Geist_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from '@/lib/site';
 import { themeInitScript } from '@/lib/theme';
 import './globals.css';
 import { RouteProgress } from '@/components/route-progress';
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
-const display = Bricolage_Grotesque({ variable: '--font-display', subsets: ['latin'], weight: ['500', '600', '700', '800'] });
+// Fonts ship with the code (src/fonts, SIL Open Font License) so builds never
+// depend on downloading them from Google Fonts.
+const geistSans = localFont({ src: '../fonts/Geist-Variable.woff2', variable: '--font-geist-sans', weight: '100 900', display: 'swap' });
+const geistMono = localFont({ src: '../fonts/GeistMono-Variable.woff2', variable: '--font-geist-mono', weight: '100 900', display: 'swap' });
+const display = localFont({ src: '../fonts/BricolageGrotesque-Variable.woff2', variable: '--font-display', weight: '200 800', display: 'swap' });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
