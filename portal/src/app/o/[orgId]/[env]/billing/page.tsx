@@ -1,11 +1,12 @@
 'use client';
 
-import { Check, Gauge } from 'lucide-react';
+import { Gauge, Heart, Mail, Server } from 'lucide-react';
 import { motion } from 'motion/react';
 import useSWR from 'swr';
-import { Badge, Card, cn, PageHeader, Skeleton } from '@/components/ui';
+import { Card, cn, PageHeader, Skeleton } from '@/components/ui';
 import { fetcher } from '@/lib/api';
 import { useOrgParams } from '@/lib/hooks';
+import { GITHUB_URL } from '@/lib/site';
 import type { BillingOverview } from '@/lib/types';
 
 const n = (v: number) => v.toLocaleString('en-US');
@@ -25,12 +26,13 @@ export default function BillingPage() {
   }
 
   const { usage } = data;
+  const current = data.plans.find((plan) => plan.id === data.plan);
   const pct = usage.quota ? Math.min(100, (usage.used / usage.quota) * 100) : 0;
   const resets = new Date(usage.end).toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
 
   return (
     <>
-      <PageHeader title="Plan & usage" description="Your plan covers live messages we deliver and completed phone verifications. The sandbox is always free." />
+      <PageHeader title="Plan & usage" description="Telenotify is free. The monthly limit counts live messages we deliver and completed phone verifications; the sandbox doesn't count." />
 
       <Card icon={Gauge} title="This month" description={`Live usage resets on ${resets}.`}>
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -52,44 +54,45 @@ export default function BillingPage() {
             />
           </div>
         )}
-        {usage.quota !== null && pct >= 100 && <p className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">Quota reached: live sends are paused until you upgrade or the month resets.</p>}
+        {usage.quota !== null && pct >= 100 && <p className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">Limit reached: live sends are paused until the month resets. Ask us to raise it, or self-host for no limit.</p>}
       </Card>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {data.plans.map((plan) => {
-          const current = plan.id === data.plan;
-          return (
-            <div key={plan.id} className={cn('relative flex flex-col rounded-2xl border bg-surface p-5 shadow-soft', current ? 'border-brand ring-2 ring-brand/20' : 'border-line')}>
-              {current && (
-                <span className="absolute -top-2.5 left-5">
-                  <Badge tone="blue">Current plan</Badge>
-                </span>
-              )}
-              <p className="font-display text-lg font-bold text-ink">{plan.name}</p>
-              <p className="mt-1 text-sm text-muted">{plan.blurb}</p>
-              <p className="mt-4 font-display text-2xl font-bold text-ink">
-                {plan.priceEtb === null ? 'Custom' : plan.priceEtb === 0 ? 'Free' : `${n(plan.priceEtb)} ETB`}
-                {plan.priceEtb ? <span className="text-sm font-medium text-muted"> / month</span> : null}
-              </p>
-              <p className="mt-3 flex items-center gap-2 text-sm text-ink">
-                <Check className="size-4 text-emerald-500" />
-                {plan.monthlyQuota === null ? 'Unlimited volume' : `${n(plan.monthlyQuota)} live messages & verifications`}
-              </p>
-              <div className="mt-auto pt-5">
-                {!current && SALES_EMAIL && (
-                  <a
-                    href={`mailto:${SALES_EMAIL}?subject=${encodeURIComponent(`Telenotify: switch to ${plan.name}`)}`}
-                    className="block rounded-xl border border-line px-3 py-2 text-center text-sm font-medium text-ink transition-colors hover:bg-subtle"
-                  >
-                    {plan.priceEtb === null ? 'Contact sales' : 'Request this plan'}
-                  </a>
-                )}
-              </div>
-            </div>
-          );
-        })}
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <InfoCard icon={Heart} title={`${current?.name ?? 'Free'} plan`} tone="brand">
+          Telenotify is free and open source. {usage.quota === null ? 'Your organization has no monthly limit.' : `Your organization can send ${n(usage.quota)} live messages and verifications each month.`}
+        </InfoCard>
+        <InfoCard icon={Mail} title="Need a higher limit?">
+          {SALES_EMAIL ? (
+            <>
+              <a className="font-medium text-brand hover:underline" href={`mailto:${SALES_EMAIL}?subject=${encodeURIComponent('Telenotify: raise our monthly limit')}`}>
+                Email us
+              </a>{' '}
+              with your organization name and expected volume, and we&apos;ll raise it.
+            </>
+          ) : (
+            'Contact us with your organization name and expected volume, and we’ll raise it.'
+          )}
+        </InfoCard>
+        <InfoCard icon={Server} title="Self-host for no limit">
+          Run Telenotify on your own server with Docker Compose.{' '}
+          <a className="font-medium text-brand hover:underline" href={GITHUB_URL} target="_blank" rel="noreferrer">
+            Get the code on GitHub
+          </a>
+          .
+        </InfoCard>
       </div>
-      <p className="mt-4 text-xs text-muted">Online payment is coming soon. For now, request a plan and we&apos;ll switch it for you.</p>
     </>
+  );
+}
+
+function InfoCard({ icon: Icon, title, tone, children }: { icon: React.ComponentType<{ className?: string }>; title: string; tone?: 'brand'; children: React.ReactNode }) {
+  return (
+    <div className={cn('rounded-2xl border bg-surface p-5 shadow-soft', tone === 'brand' ? 'border-brand/40 ring-2 ring-brand/10' : 'border-line')}>
+      <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-brand/15 to-accent/15 text-brand ring-1 ring-inset ring-brand/15">
+        <Icon className="size-4" />
+      </span>
+      <p className="mt-3 font-semibold text-ink">{title}</p>
+      <p className="mt-1 text-sm leading-relaxed text-muted">{children}</p>
+    </div>
   );
 }
