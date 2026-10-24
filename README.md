@@ -1,8 +1,37 @@
-# Telenotify
+<p align="center">
+  <img src="docs/brand/telenotify-mark-512.png" width="96" alt="Telenotify logo" />
+</p>
 
-Telegram notifications for businesses, through one API call. Organizations sign up in the **developer portal**, try everything in a **sandbox**, then go **live** with their own bot.
+<h1 align="center">Telenotify</h1>
 
-Telenotify only sends on Telegram. When a customer can't be reached there, the API says so immediately (`UNDELIVERABLE` with a reason) and sends webhook events, so the organization's own SMS or email provider can take over.
+<p align="center">
+  <b>Customer notifications and phone verification on Telegram, with one API call.</b><br />
+  Free and open source. Built in Ethiopia.
+</p>
+
+<p align="center">
+  <a href="https://telenotify.duckdns.org">Website</a> ·
+  <a href="https://telenotify.duckdns.org/signup">Hosted (free)</a> ·
+  <a href="https://www.npmjs.com/package/@telenotify/node">Node.js SDK</a> ·
+  <a href="#self-host">Self-host</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License: AGPL-3.0" /></a>
+  <a href="https://www.npmjs.com/package/@telenotify/node"><img src="https://img.shields.io/npm/v/@telenotify/node?label=%40telenotify%2Fnode" alt="npm" /></a>
+</p>
+
+---
+
+Businesses send order updates, OTPs, payment alerts and receipts through **their own branded Telegram bot**, from one REST call. Telegram doesn't charge per message, so it's a much cheaper first channel than SMS for customers who use it.
+
+- **Notifications:** plain text or templates in English, Amharic, Afaan Oromo and Tigrinya, with URL buttons, idempotency and a priority lane for OTPs.
+- **Phone verification without SMS:** "Verify with Telegram": the customer shares their number with your bot in one tap, and Telegram vouches for it.
+- **An honest fallback signal:** when a customer can't be reached on Telegram, the API says so immediately (`UNDELIVERABLE` + reason), so your SMS or email provider takes over. It can also send that SMS for you through your own AfroMessage account.
+- **Developer portal:** sandbox with test customers, API keys, signed webhooks with retries and a delivery log, request log, analytics, team, audit log, and an interactive API reference with code in six languages.
+
+**Use it hosted for free** (fair use: 10,000 live messages and verifications per organization per month) or **run it yourself with no limits**.
 
 ```
 .             NestJS API (public /v1 API, portal API, auth, Telegram webhooks)
@@ -95,6 +124,20 @@ The portal includes:
 - **Webhook delivery:** events are queued in Redis and retried 10 times with exponential backoff (about 40 minutes in total). `x-telenotify-event-id` stays the same across retries, so receivers can de-duplicate.
 - **Client IP:** the API trusts `X-Forwarded-For` only from `TRUST_PROXY` hops. Next.js keeps any `X-Forwarded-For` it receives, so in production the portal must sit behind a proxy that overwrites it. The Caddy setup below does this.
 
+## Self-host
+<a id="self-host"></a>
+
+One server with Docker is enough: the API, portal, Postgres and Redis, behind Caddy for HTTPS.
+
+```bash
+git clone https://github.com/sami-yesha/telenotify.git
+cd telenotify/deploy
+cp .env.production.example .env.production   # fill in domains, secrets, bot token
+docker compose --env-file .env.production up -d --build
+```
+
+Back up the database and `ENCRYPTION_KEY`: see [docs/BACKUPS.md](docs/BACKUPS.md).
+
 ## Deploy
 
 Test environment on Vercel (portal) + Render free (API): see [docs/DEPLOY.md](docs/DEPLOY.md) and `render.yaml`.
@@ -136,3 +179,9 @@ docker compose --env-file .env.production up -d --build
 - A retry can send a message twice if the database update fails right after Telegram accepts it.
 - AfroMessage delivery reports: SMS fallback "sent" means accepted by AfroMessage, not delivered to the phone.
 - Media and documents, and broadcasts.
+
+## License
+
+Telenotify is free software under the [GNU Affero General Public License v3.0](LICENSE): you can use, modify and self-host it. If you run a modified version as a service for others, you must share your changes under the same license.
+
+The Node.js SDK in [`sdk/node`](sdk/node) is MIT licensed, so it can go into any application.
