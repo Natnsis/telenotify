@@ -59,6 +59,8 @@ export interface EnvironmentInfo {
   botUsername: string | null;
   eventWebhookUrl: string | null;
   eventSigningSecret: string;
+  publishableKey: string | null;
+  allowedOrigins: string[];
   usage: { messagesToday: number; linkedCustomers: number; dailyMessageLimit?: number; linkedCustomerLimit?: number };
   testCustomers: string[];
 }

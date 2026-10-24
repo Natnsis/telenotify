@@ -10,6 +10,7 @@ import {
   CreditCard,
   FileText,
   MessageSquareText,
+  MousePointerClick,
   ScrollText,
   ShieldAlert,
   ShieldCheck,
@@ -61,6 +62,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: '/keys', label: 'API keys', icon: KeyRound },
       { href: '/templates', label: 'Templates', icon: FileText },
+      { href: '/verify-widget', label: 'Verify widget', icon: MousePointerClick },
       { href: '/sms-fallback', label: 'SMS fallback', icon: MessageSquareText },
       { href: '/webhooks', label: 'Webhooks', icon: Webhook },
       { href: '/bot', label: 'Telegram bot', icon: Bot },

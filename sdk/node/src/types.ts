@@ -96,12 +96,30 @@ export interface Verification {
   phone: string | null;
   /** t.me link while the verification is open. */
   url: string | null;
+  /** Telenotify's hosted verify page for this verification: redirect the person here. */
+  hostedUrl: string;
+  /** Where the hosted page sends the person when done. */
+  returnUrl: string | null;
   expiresAt: string;
   verifiedAt: string | null;
   createdAt: string;
 }
 
+/** The signed result from the hosted verify page or the Verify widget. */
+export interface VerificationResult {
+  id: string;
+  status: 'VERIFIED' | 'FAILED';
+  /** The verified number, e.g. "251911223344" (null unless VERIFIED). */
+  phone: string | null;
+  reason: string | null;
+  environment: 'sandbox' | 'live';
+  iat: number;
+  exp: number;
+}
+
 export interface CreateVerificationParams {
+  /** Hosted verify page: send the person back here when done (?telenotify_verification=…&telenotify_token=…). */
+  returnUrl?: string;
   /** Your id for this person; once verified they're also linked for notifications. */
   externalId?: string;
   /** Fail unless the shared Telegram number matches this one. */

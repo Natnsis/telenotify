@@ -94,3 +94,18 @@ test('sends by template and lists templates', async () => {
   assert.equal(fetch.calls[1].url, 'http://api.test/v1/templates');
   assert.deepEqual(templates[0].placeholders, ['name']);
 });
+
+test('verifies hosted-page tokens and rejects forged or expired ones', () => {
+  const { verifyToken } = require('../dist');
+  const sign = (payload, secret) => {
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    return `${body}.${createHmac('sha256', secret).update(body).digest('base64url')}`;
+  };
+  const now = Math.floor(Date.now() / 1000);
+  const good = sign({ id: 'v1', status: 'VERIFIED', phone: '251911223344', reason: null, environment: 'live', iat: now, exp: now + 600 }, 'whsec_x');
+  assert.equal(verifyToken(good, 'whsec_x').phone, '251911223344');
+  assert.equal(verifyToken(good, 'whsec_other'), null);
+  const expired = sign({ id: 'v1', status: 'VERIFIED', phone: '1', reason: null, environment: 'live', iat: now - 900, exp: now - 300 }, 'whsec_x');
+  assert.equal(verifyToken(expired, 'whsec_x'), null);
+  assert.equal(verifyToken('not.a-token', 'whsec_x'), null);
+});
