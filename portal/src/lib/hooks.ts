@@ -11,7 +11,7 @@ export function useRequireUser() {
   const router = useRouter();
   const { data, error, isLoading, mutate } = useSWR<Me>('/auth/me', fetcher, { shouldRetryOnError: false });
   useEffect(() => {
-    if (error instanceof ApiError && error.status === 401) router.replace('/login');
+    if (error instanceof ApiError && error.status === 401) router.replace(`/login?next=${encodeURIComponent(location.pathname + location.search)}`);
     else if (data && !data.emailVerified) router.replace('/check-email');
   }, [data, error, router]);
   return { user: data?.emailVerified ? data : undefined, isLoading, mutate };

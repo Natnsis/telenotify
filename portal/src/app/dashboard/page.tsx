@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { SplashScreen } from '@/components/splash';
 import { api, ApiError } from '@/lib/api';
 import { takePendingInvite } from '@/lib/invite';
+import { takeNext } from '@/lib/next-path';
 import type { Me, OrgSummary } from '@/lib/types';
 
 // Routes the visitor to the right place: login, email check, onboarding or their org.
@@ -18,6 +19,9 @@ export default function Home() {
         // Finish an invitation that was opened before signing in.
         const invite = takePendingInvite();
         if (invite) return router.replace(`/invite?token=${encodeURIComponent(invite)}`);
+        // Signed in from a deep link, e.g. the admin portal.
+        const next = takeNext();
+        if (next) return router.replace(next);
         const orgs = await api<OrgSummary[]>('/portal/orgs');
         router.replace(orgs.length ? `/o/${orgs[0].id}/sandbox` : '/onboarding');
       } catch (error) {
