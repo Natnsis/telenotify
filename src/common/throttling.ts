@@ -30,4 +30,6 @@ export const AUTH_LIMITS = {
   google: { ip: { limit: 20, ttl: MINUTE } },
   // Each test sends a real SMS on the organization's AfroMessage balance.
   testSms: { ip: { limit: 5, ttl: 10 * MINUTE } },
+  // Verify widget: anyone can start a session with a publishable key.
+  publicVerification: { ip: { limit: 10, ttl: MINUTE } },
 };

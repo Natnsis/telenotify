@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
 import { InlineButton } from '../telegram/telegram-api.client';
 
 export class CreateOrgDto {
@@ -96,4 +96,12 @@ export class CustomerMessageDto {
   @IsNotEmpty()
   @MaxLength(4096)
   text!: string;
+}
+
+export class AllowedOriginsDto {
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  @MaxLength(300, { each: true })
+  origins!: string[];
 }

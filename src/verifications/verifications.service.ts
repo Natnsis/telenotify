@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Environment, Verification } from '@prisma/client';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Environment, Organization, Verification } from '@prisma/client';
 import { BillingService } from '../billing/billing.service';
 import { randomToken } from '../common/crypto';
 import { normalizePhone } from '../common/phone';
@@ -8,6 +9,7 @@ import { ChatScope, CustomersService, TelegramChat } from '../customers/customer
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { signResult } from './result-token';
 
 // Telegram start parameters for verification links look like "v_<token>".
 export const VERIFICATION_PREFIX = 'v_';
@@ -26,9 +28,13 @@ export class VerificationsService {
     private readonly customers: CustomersService,
     private readonly webhooks: WebhooksService,
     private readonly billing: BillingService,
+    private readonly config: ConfigService,
   ) {}
 
-  async create(environment: Environment, input: { externalId?: string; phone?: string; expiresInMinutes?: number }) {
+  async create(
+    environment: Environment,
+    input: { externalId?: string; phone?: string; expiresInMinutes?: number; returnUrl?: string; origin?: string },
+  ) {
     if (input.externalId && isTestCustomer(input.externalId)) {
       throw new BadRequestException(`"${input.externalId}" is a built-in test customer and cannot be verified`);
     }
@@ -46,6 +52,8 @@ export class VerificationsService {
         externalId: input.externalId,
         expectedPhone: input.phone ? normalizePhone(input.phone) : undefined,
         expiresAt: new Date(Date.now() + (input.expiresInMinutes ?? 10) * 60_000),
+        returnUrl: input.returnUrl ? httpUrl(input.returnUrl) : undefined,
+        origin: input.origin,
       },
     });
     return this.toView(verification, botUsername);
@@ -128,6 +136,61 @@ export class VerificationsService {
     return { kind: 'verified', orgName };
   }
 
+  // ---------- Hosted verify page and the embeddable button ----------
+
+  // Started from a web page with a publishable key: no externalId (a browser must not be
+  // able to link a customer account), and in live only from the allowed websites.
+  async createPublic(input: { publishableKey: string; origin?: string; returnUrl?: string; phone?: string }) {
+    const environment = await this.prisma.environment.findUnique({ where: { publishableKey: input.publishableKey }, include: { org: true } });
+    if (!environment) throw new BadRequestException('Unknown publishable key');
+    const site = input.origin ?? (input.returnUrl ? new URL(httpUrl(input.returnUrl)).origin : undefined);
+    if (!site) throw new BadRequestException('Give the website (origin) or a returnUrl');
+    const origin = new URL(httpUrl(site)).origin;
+    if (environment.type === 'LIVE' && !environment.allowedOrigins.includes(origin)) {
+      throw new ForbiddenException(`${origin} isn't an allowed website for this key. Add it under Live → Verify widget in the portal.`);
+    }
+    const created = await this.create(environment, { phone: input.phone, returnUrl: input.returnUrl, origin });
+    return { id: created.id, hostedUrl: created.hostedUrl };
+  }
+
+  // What the hosted page shows. The id is an unguessable UUID that only the person
+  // verifying receives, so it doubles as the capability to read this.
+  async getPublic(id: string) {
+    const found = await this.prisma.verification.findUnique({ where: { id }, include: { environment: { include: { org: true } } } });
+    if (!found) throw new NotFoundException('Verification not found');
+    const verification = await this.expireIfDue(found);
+    const environment = found.environment;
+    const view = this.toView(verification, this.telegram.botUsernameFor(environment));
+    const final = verification.status === 'VERIFIED' || verification.status === 'FAILED';
+    return {
+      id: view.id,
+      status: view.status,
+      reason: view.reason,
+      url: view.url,
+      expiresAt: view.expiresAt,
+      environment: environment.type === 'LIVE' ? 'live' : 'sandbox',
+      orgName: environment.org.name,
+      botUsername: this.telegram.botUsernameFor(environment) ?? null,
+      returnUrl: verification.returnUrl,
+      origin: verification.origin,
+      phone: verification.status === 'VERIFIED' ? verification.phone : null,
+      token: final ? this.resultToken(verification, environment) : null,
+    };
+  }
+
+  resultToken(verification: Verification, environment: Environment & { org?: Organization }) {
+    return signResult(
+      {
+        id: verification.id,
+        status: verification.status as 'VERIFIED' | 'FAILED',
+        phone: verification.status === 'VERIFIED' ? verification.phone : null,
+        reason: verification.reason,
+        environment: environment.type === 'LIVE' ? 'live' : 'sandbox',
+      },
+      environment.eventSigningSecret,
+    );
+  }
+
   toView(verification: Verification, botUsername?: string) {
     return {
       id: verification.id,
@@ -137,6 +200,10 @@ export class VerificationsService {
       // The verified number, once VERIFIED (or the mismatching one, on phone_mismatch).
       phone: verification.phone,
       url: botUsername && ['PENDING', 'AWAITING_CONTACT'].includes(verification.status) ? `https://t.me/${botUsername}?start=${VERIFICATION_PREFIX}${verification.token}` : null,
+      // Send the person here instead of to the t.me link: it shows your organization, a
+      // QR code on desktop and the live status, then returns to returnUrl.
+      hostedUrl: `${this.config.get<string>('PORTAL_URL', '').replace(/\/$/, '')}/verify/${verification.id}`,
+      returnUrl: verification.returnUrl,
       expiresAt: verification.expiresAt,
       verifiedAt: verification.verifiedAt,
       createdAt: verification.createdAt,
@@ -147,4 +214,15 @@ export class VerificationsService {
     if (!['PENDING', 'AWAITING_CONTACT'].includes(verification.status) || verification.expiresAt > new Date()) return verification;
     return this.prisma.verification.update({ where: { id: verification.id }, data: { status: 'EXPIRED' } });
   }
+}
+
+function httpUrl(value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new BadRequestException(`Not a valid URL: ${value}`);
+  }
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new BadRequestException('Only http and https URLs are allowed');
+  return url.toString();
 }

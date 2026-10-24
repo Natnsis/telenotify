@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Environment, EnvironmentType, Organization, User } from '@prisma/client';
 import { AdminService } from '../admin/admin.service';
 import { AuditService } from '../audit/audit.service';
-import { encrypt, randomToken, sha256 } from '../common/crypto';
+import { encrypt, randomToken, sha256, publishableKey } from '../common/crypto';
 import { assertPublicUrl, BlockedAddressError } from '../common/network-guard';
 import { TEST_CUSTOMERS } from '../common/sandbox';
 import { toMessageView } from '../messages/messages.service';
@@ -38,6 +38,7 @@ export class PortalService {
             type,
             webhookSecret: randomToken(32),
             eventSigningSecret: `whsec_${randomToken(24)}`,
+            publishableKey: publishableKey(type),
           })),
         },
       },
@@ -97,6 +98,8 @@ export class PortalService {
       botUsername: this.telegram.botUsernameFor(environment) ?? null,
       eventWebhookUrl: environment.eventWebhookUrl,
       eventSigningSecret: environment.eventSigningSecret,
+      publishableKey: environment.publishableKey,
+      allowedOrigins: environment.allowedOrigins,
       usage: {
         messagesToday,
         linkedCustomers,
@@ -126,6 +129,21 @@ export class PortalService {
       where: { id: environment.id },
       data: { eventSigningSecret: `whsec_${randomToken(24)}` },
     });
+    return this.environmentView(updated);
+  }
+
+  // ---------- Verify widget ----------
+
+  async setAllowedOrigins(environment: Environment, origins: string[], actor: User) {
+    const cleaned = [...new Set(origins.map((value) => toOrigin(value)))];
+    const updated = await this.prisma.environment.update({ where: { id: environment.id }, data: { allowedOrigins: cleaned } });
+    await this.audit.record(environment.orgId, actor, 'verify_widget.updated', cleaned.join(', ') || 'no websites', { environment: environment.type.toLowerCase() });
+    return this.environmentView(updated);
+  }
+
+  async rotatePublishableKey(environment: Environment, actor: User) {
+    const updated = await this.prisma.environment.update({ where: { id: environment.id }, data: { publishableKey: publishableKey(environment.type) } });
+    await this.audit.record(environment.orgId, actor, 'verify_widget.updated', 'publishable key rotated', { environment: environment.type.toLowerCase() });
     return this.environmentView(updated);
   }
 
@@ -351,4 +369,18 @@ export class PortalService {
       );
     }
   }
+}
+
+// "https://shop.example.com/checkout" → "https://shop.example.com"
+function toOrigin(value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    throw new BadRequestException(`Not a valid website address: ${value}`);
+  }
+  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname))) {
+    throw new BadRequestException(`${value}: use https (http is only allowed for localhost)`);
+  }
+  return url.origin;
 }

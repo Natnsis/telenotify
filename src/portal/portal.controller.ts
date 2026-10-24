@@ -14,7 +14,7 @@ import { BillingService } from '../billing/billing.service';
 import { MessagesService } from '../messages/messages.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { VerificationsService } from '../verifications/verifications.service';
-import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, CustomerMessageDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, TestSmsDto, UpdateEnvironmentDto, UpdateSmsFallbackDto } from './portal.dto';
+import { ConnectBotDto, CreateApiKeyDto, CreateOrgDto, CustomerMessageDto, PlaygroundLinkDto, PlaygroundSendDto, PlaygroundVerifyDto, TestSmsDto, AllowedOriginsDto, UpdateEnvironmentDto, UpdateSmsFallbackDto } from './portal.dto';
 import { PortalService } from './portal.service';
 import { AdminService } from '../admin/admin.service';
 import { LiveReviewDto } from '../admin/admin.dto';
@@ -100,6 +100,17 @@ export class PortalController {
   @Delete(':orgId/envs/:env/bot')
   disconnectBot(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User) {
     return this.portal.disconnectBot(environment, user);
+  }
+
+  @Put(':orgId/envs/:env/verify-widget/origins')
+  setAllowedOrigins(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User, @Body() dto: AllowedOriginsDto) {
+    return this.portal.setAllowedOrigins(environment, dto.origins, user);
+  }
+
+  @Post(':orgId/envs/:env/verify-widget/rotate-key')
+  @HttpCode(200)
+  rotatePublishableKey(@CurrentEnvironment() environment: EnvironmentWithOrg, @CurrentUser() user: User) {
+    return this.portal.rotatePublishableKey(environment, user);
   }
 
   @Get(':orgId/envs/:env/sms-fallback')

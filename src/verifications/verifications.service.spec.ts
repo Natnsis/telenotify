@@ -15,7 +15,7 @@ function setup(open: object | null) {
   const customers = { linkVerified: jest.fn().mockResolvedValue({ linked: true }) };
   const webhooks = { emit: jest.fn() };
   const billing = { assertWithinQuota: jest.fn() };
-  const service = new VerificationsService(prisma as any, telegram as any, customers as any, webhooks as any, billing as any);
+  const service = new VerificationsService(prisma as any, telegram as any, customers as any, webhooks as any, billing as any, { get: (_k: string, d: unknown) => d ?? 'http://portal.test' } as any);
   const events = () => webhooks.emit.mock.calls.map((c) => c[1]);
   return { service, prisma, customers, events };
 }

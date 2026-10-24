@@ -4,6 +4,11 @@ export function randomToken(bytes = 24): string {
   return randomBytes(bytes).toString('base64url');
 }
 
+/** Publishable key for the verify widget: letters and digits only, safe in HTML attributes. */
+export function publishableKey(type: 'SANDBOX' | 'LIVE'): string {
+  return `${type === 'LIVE' ? 'tn_pk_live_' : 'tn_pk_test_'}${randomBytes(12).toString('hex')}`;
+}
+
 export function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
 }

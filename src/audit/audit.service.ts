@@ -25,7 +25,8 @@ export type AuditAction =
   | 'org.suspended'
   | 'org.unsuspended'
   | 'live.approved'
-  | 'live.review_requested';
+  | 'live.review_requested'
+  | 'verify_widget.updated';
 
 export type Actor = Pick<User, 'id' | 'email'> | null;
 

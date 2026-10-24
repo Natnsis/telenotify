@@ -149,6 +149,10 @@ model Environment {
   webhookSecret      String
   eventWebhookUrl    String?
   eventSigningSecret String
+  // Safe to put in a web page: it can only start "Verify with Telegram" sessions
+  // (tn_pk_test_… / tn_pk_live_…), and in live only from allowedOrigins.
+  publishableKey     String?         @unique
+  allowedOrigins     String[]        @default([])
   // Bring-your-own SMS fallback (AfroMessage), paid by the organization. In the
   // sandbox it is simulated and needs no credentials.
   smsFallbackEnabled Boolean         @default(false)
@@ -346,6 +350,10 @@ model Verification {
   telegramChatId String?
   expiresAt      DateTime
   verifiedAt     DateTime?
+  // Hosted verify page: where to send the person afterwards, or the site whose
+  // popup receives the result (postMessage).
+  returnUrl      String?
+  origin         String?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
