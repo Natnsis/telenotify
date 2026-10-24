@@ -18,7 +18,7 @@ export class OperatorNotifier {
   ) {}
 
   async notify(subject: string, text: string): Promise<void> {
-    const link = `${this.config.get<string>('PORTAL_URL', '').replace(/\/$/, '')}/admin`;
+    const link = `${this.config.get<string>('PORTAL_URL', '').replace(/\/$/, '')}/admin/orgs`;
     const body = `${text}\n\nReview: ${link}`;
     for (const email of operatorEmails(this.config)) {
       await this.mail.send(email, `[Telenotify admin] ${subject}`, body);
