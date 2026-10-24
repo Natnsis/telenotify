@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Telegram-first customer messaging API with SMS fallback",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "build": "nest build",
     "start": "nest start",
