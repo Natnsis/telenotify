@@ -87,6 +87,21 @@ const result = await telenotify.verifications.get(verification.id);
 if (result.status === 'VERIFIED') console.log('Verified', result.phone);
 ```
 
+## Verify widget tokens
+
+When the Verify widget (or the hosted verify page) finishes, your page gets a signed token. Check it on your server:
+
+```ts
+import { verifyToken } from '@telenotify/node';
+
+const result = verifyToken(req.body.token, process.env.TELENOTIFY_SIGNING_SECRET!);
+if (result?.status === 'VERIFIED') {
+  // result.phone, e.g. "251911223344"
+}
+```
+
+Server-side flow instead: `telenotify.verifications.create({ returnUrl })` and redirect to `verification.hostedUrl`.
+
 ## Webhooks
 
 ```ts
