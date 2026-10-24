@@ -38,11 +38,17 @@ Agreed order (2026-10-22). Tick items as they ship; keep this file current.
 - [x] Replace native select dropdowns with a custom, themed picker
 - [x] Top progress bar when navigating between pages
 
+## Operations
+- [x] Nightly encrypted database backups with a Telegram copy (docs/BACKUPS.md); needs a one-time setup on the server
+
 ## Proposed: payment-gateway readiness (from the 2026-10-22 scenario, not yet agreed)
 - [x] Per-bot send rate limits and a priority lane so OTP/transaction messages jump ahead of bulk sends
 - [x] Message templates with Amharic/English variants
 - [x] Optional "bring your own SMS provider" fallback (e.g. AfroMessage credentials), so Telenotify sends the SMS itself when Telegram can't
 - [ ] Data-residency and compliance notes for regulated customers (hosting location, DPA)
 
-## Batch 5: Payments
-- [ ] Online plan payment (e.g. Chapa)
+## Batch 5: Payments (on hold)
+Decided 2026-10-24: Telenotify is **free and open source** (AGPL-3.0) for now. Chapa needs a registered business (TIN, trade license), so payments wait until there is one. Options explored: Telebirr + SMS matching, voucher codes, a partner's Chapa account.
+- [x] Make the hosted service free: 10,000 live messages and verifications per org per month, fair use; raised limits on request
+- [x] Open source: AGPL-3.0 license, contributing guide, security policy, self-host instructions
+- [ ] Online plan payment, once registered (Chapa)
