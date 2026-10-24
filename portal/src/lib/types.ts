@@ -5,6 +5,8 @@ export interface Me {
   emailVerified: boolean;
   hasPassword: boolean;
   googleLinked: boolean;
+  /** Runs this Telenotify server; can open /admin. */
+  isOperator?: boolean;
 }
 
 export interface OrgSummary {
@@ -19,6 +21,33 @@ export interface Org extends OrgSummary {
   plan: PlanId;
   liveBotConnected: boolean;
   liveBotUsername: string | null;
+  status: 'active' | 'suspended';
+  suspendedReason: string | null;
+  /** Until approved, live sending is capped at unapprovedDailyLimit per day. */
+  liveApproved: boolean;
+  liveReviewRequestedAt: string | null;
+  unapprovedDailyLimit: number;
+}
+
+export interface AdminOrg {
+  id: string;
+  name: string;
+  createdAt: string;
+  owners: { email: string; name: string }[];
+  status: 'ACTIVE' | 'SUSPENDED';
+  suspendedAt: string | null;
+  suspendedReason: string | null;
+  plan: PlanId;
+  planName: string;
+  monthlyQuota: number | null;
+  liveApprovedAt: string | null;
+  liveReviewRequestedAt: string | null;
+  liveUseCase: string | null;
+  website: string | null;
+  liveBotUsername: string | null;
+  usedThisMonth: number;
+  blocked24h: number;
+  reached24h: number;
 }
 
 export type EnvName = 'sandbox' | 'live';

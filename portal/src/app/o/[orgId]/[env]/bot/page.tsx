@@ -4,6 +4,7 @@ import { Bot, CheckCircle2, Plug, Sparkles } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Alert, Button, Card, Input, PageHeader, Spinner } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { LiveReviewCard } from '@/components/live-review';
 import { envPath, useEnvironment, useOrg, useOrgParams } from '@/lib/hooks';
 import type { EnvironmentInfo } from '@/lib/types';
 
@@ -60,6 +61,9 @@ export default function BotPage() {
   return (
     <>
       <PageHeader title="Telegram bot" description="Your customers chat with your own bot, under your name and logo." />
+      <div className="mb-6">
+        <LiveReviewCard />
+      </div>
       {environment.botConnected ? (
         <>
         <Card

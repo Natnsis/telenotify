@@ -124,6 +124,14 @@ The portal includes:
 - **Webhook delivery:** events are queued in Redis and retried 10 times with exponential backoff (about 40 minutes in total). `x-telenotify-event-id` stays the same across retries, so receivers can de-duplicate.
 - **Client IP:** the API trusts `X-Forwarded-For` only from `TRUST_PROXY` hops. Next.js keeps any `X-Forwarded-For` it receives, so in production the portal must sit behind a proxy that overwrites it. The Caddy setup below does this.
 
+## Running the hosted service (operators)
+
+Put your email in `OPERATOR_EMAILS` and open **/admin** in the portal (also in the account menu). From there you approve live sending, suspend or unsuspend organizations and raise limits; every action goes into the organization's audit log.
+
+- **New organizations** can send `UNAPPROVED_LIVE_DAILY_LIMIT` (100) live messages a day until approved. They request a review on the Live → Telegram bot page, and operators get an email (and a Telegram message when `OPERATOR_TELEGRAM_CHAT_ID` is set).
+- **Suspended organizations** get `403 org_suspended` on every API call and see the reason in their dashboard.
+- **Spam detection:** when at least `AUTO_SUSPEND_MIN_BLOCKS` (10) recipients, and `AUTO_SUSPEND_BLOCK_RATIO` (30%) of those messaged, block a live bot within 24 hours, the organization is suspended automatically and operators are alerted.
+
 ## Self-host
 <a id="self-host"></a>
 

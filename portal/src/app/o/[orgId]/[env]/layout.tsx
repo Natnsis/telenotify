@@ -11,6 +11,8 @@ import {
   FileText,
   MessageSquareText,
   ScrollText,
+  ShieldAlert,
+  ShieldCheck,
   Search,
   Settings,
   UserCog,
@@ -39,7 +41,7 @@ import { WelcomeTour } from '@/components/welcome-tour';
 import { cn } from '@/components/ui';
 import { api, fetcher } from '@/lib/api';
 import { useOrg, useOrgParams, useRequireUser } from '@/lib/hooks';
-import type { EnvName, OrgSummary } from '@/lib/types';
+import type { EnvName, Org, OrgSummary } from '@/lib/types';
 import { useProgressRouter } from '@/components/route-progress';
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; sandboxOnly?: boolean };
@@ -125,7 +127,7 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
       env={env}
       subpath={subpath}
       orgSwitcher={<OrgSwitcher currentId={orgId} currentName={org.name} />}
-      footer={<UserMenu name={user.name} email={user.email} />}
+      footer={<UserMenu name={user.name} email={user.email} isOperator={Boolean(user.isOperator)} />}
     />
   );
 
@@ -219,6 +221,7 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
           <WelcomeTour storageKey={`tn_tour_done:${user.id}`} />
 
           <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
+            <OrgStatusBanner org={org} env={env} botHref={`${base}/bot`} onBotPage={subpath.startsWith('/bot')} />
             <motion.div key={pathname} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: 'easeOut' }}>
               {children}
             </motion.div>
@@ -371,7 +374,7 @@ function OrgSwitcher({ currentId, currentName }: { currentId: string; currentNam
   );
 }
 
-function UserMenu({ name, email }: { name: string; email: string }) {
+function UserMenu({ name, email, isOperator }: { name: string; email: string; isOperator: boolean }) {
   const router = useProgressRouter();
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(open, () => setOpen(false));
@@ -389,6 +392,11 @@ function UserMenu({ name, email }: { name: string; email: string }) {
             <Link href="/account" className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink hover:bg-subtle">
               <UserCog className="size-4 text-muted" /> Account settings
             </Link>
+            {isOperator && (
+              <Link href="/admin" className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink hover:bg-subtle">
+                <ShieldCheck className="size-4 text-muted" /> Admin
+              </Link>
+            )}
             <Link href="/" className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink hover:bg-subtle">
               <Rocket className="size-4 text-muted" /> Telenotify home
             </Link>
@@ -414,4 +422,39 @@ function UserMenu({ name, email }: { name: string; email: string }) {
       </button>
     </div>
   );
+}
+
+// Shown above every page: a suspended organization, or live sending still capped.
+function OrgStatusBanner({ org, env, botHref, onBotPage }: { org: Org; env: EnvName; botHref: string; onBotPage: boolean }) {
+  if (org.status === 'suspended') {
+    return (
+      <div className="mb-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+        <ShieldAlert className="mt-0.5 size-5 shrink-0" />
+        <div>
+          <p className="font-semibold">This organization is suspended</p>
+          <p className="mt-0.5">
+            {org.suspendedReason ?? 'Sending is disabled.'} API keys are rejected and no messages are sent. Contact Telenotify support if you think this is a mistake.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  if (env === 'live' && !org.liveApproved && !onBotPage) {
+    return (
+      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+        <ShieldCheck className="size-5 shrink-0" />
+        <p className="min-w-0 flex-1">
+          {org.liveReviewRequestedAt
+            ? `Review requested. Until it's approved, you can send ${org.unapprovedDailyLimit} live messages a day.`
+            : `Live sending is limited to ${org.unapprovedDailyLimit} messages a day until your organization is approved.`}
+        </p>
+        {!org.liveReviewRequestedAt && (
+          <Link href={botHref} className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">
+            Request review
+          </Link>
+        )}
+      </div>
+    );
+  }
+  return null;
 }
