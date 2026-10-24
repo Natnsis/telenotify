@@ -45,7 +45,7 @@ export class BillingService {
         {
           statusCode: HttpStatus.PAYMENT_REQUIRED,
           code: 'quota_exceeded',
-          message: `Monthly quota of ${plan.monthlyQuota.toLocaleString('en-US')} on the ${plan.name} plan is used up. Upgrade your plan in the portal.`,
+          message: `Monthly fair-use limit of ${plan.monthlyQuota.toLocaleString('en-US')} live messages and verifications is used up. It resets next month; ask us to raise it, or self-host Telenotify for no limit.`,
         },
         HttpStatus.PAYMENT_REQUIRED,
       );
@@ -79,12 +79,12 @@ export class BillingService {
     const link = `${portal}/o/${org.id}/live/billing`;
     const subject =
       threshold >= 100
-        ? `${org.name}: live messages are paused (monthly quota reached)`
-        : `${org.name}: ${threshold}% of your monthly Telenotify quota used`;
+        ? `${org.name}: live messages are paused (monthly limit reached)`
+        : `${org.name}: ${threshold}% of your monthly Telenotify limit used`;
     const body =
       threshold >= 100
-        ? `Hi,\n\n${org.name} has used all ${quota.toLocaleString('en-US')} live messages and verifications included in the ${plan.name} plan this month. New live messages are rejected until you upgrade or the month resets, so customers may miss notifications.\n\nUpgrade or review usage: ${link}`
-        : `Hi,\n\n${org.name} has used ${used.toLocaleString('en-US')} of ${quota.toLocaleString('en-US')} live messages and verifications (${threshold}%) on the ${plan.name} plan this month.\n\nTo avoid interruptions, consider upgrading: ${link}`;
+        ? `Hi,\n\n${org.name} has used all ${quota.toLocaleString('en-US')} free live messages and verifications this month (${plan.name}). New live messages are rejected until the month resets, so customers may miss notifications.\n\nTelenotify is free; reply to this email if you need a higher limit, or self-host it for no limit.\n\nReview usage: ${link}`
+        : `Hi,\n\n${org.name} has used ${used.toLocaleString('en-US')} of ${quota.toLocaleString('en-US')} free live messages and verifications (${threshold}%) this month.\n\nTelenotify is free; if you'll need more, reply to this email and we'll raise your limit.\n\nReview usage: ${link}`;
     for (const owner of owners) {
       await this.mail.send(owner.user.email, subject, body);
     }
