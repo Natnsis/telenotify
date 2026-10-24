@@ -129,11 +129,10 @@ docker compose --env-file .env.production up -d --build
 
 ## Not done yet
 
-- Inviting teammates and roles (the data model has OWNER/MEMBER; there is no UI or permission checks yet).
-- Approval or KYC before going live; live usage limits and billing.
+- Online plan payment (Chapa); plans are changed by an operator with `npm run plan:set` today.
+- Approval or KYC before an organization goes live.
+- Data-residency and compliance notes (hosting location, DPA, subprocessors) for regulated customers.
 - Rate-limit counters are per instance (in memory); use Redis storage before running more than one API instance.
-- A delivery log of webhook events in the portal.
-- Per-bot send rate limits (one global 25/s limit today).
 - A retry can send a message twice if the database update fails right after Telegram accepts it.
+- AfroMessage delivery reports: SMS fallback "sent" means accepted by AfroMessage, not delivered to the phone.
 - Media and documents, and broadcasts.
-- A landing page and visual polish of the portal.
